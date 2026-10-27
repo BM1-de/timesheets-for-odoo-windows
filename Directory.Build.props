@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Company>Baumgärtner Marketing GmbH</Company>
+    <Copyright>Copyright © 2026 Baumgärtner Marketing GmbH</Copyright>
+    <Version>0.1.0</Version>
+    <NeutralLanguage>de</NeutralLanguage>
+    <SatelliteResourceLanguages>de;en;fr</SatelliteResourceLanguages>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,16 @@
+# .NET und Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+AppPackages/
+BundleArtifacts/
+artifacts/
+
+# macOS
+.DS_Store
+
+# Lokale Testumgebung
+dev/.env
