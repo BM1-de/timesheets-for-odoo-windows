@@ -75,6 +75,11 @@ public sealed partial class PanelView : UserControl, INotifyPropertyChanged
         _ => 104,
     };
 
+    /// <summary>Höhen der Teile, für das Protokoll der Bildschirmfotos.</summary>
+    internal string LayoutReport() =>
+        $"natürlich {NaturalHeight:0}, Kopf {Header.ActualHeight:0}, Hinweise {Banners.ActualHeight:0}, " +
+        $"Inhalt {ContentStack.ActualHeight:0} (gewünscht {ContentStack.DesiredSize.Height:0}) in {Scroller.ActualHeight:0}, Fuß {Footer.ActualHeight:0}";
+
     /// <summary>Höhe, die ein Element ohne Grenze bräuchte; ActualHeight ist höchstens so hoch wie das Fenster.</summary>
     private static double UnconstrainedHeight(FrameworkElement element)
     {

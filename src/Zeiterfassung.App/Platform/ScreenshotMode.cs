@@ -164,6 +164,7 @@ public static class ScreenshotMode
         for (var round = 0; round < 8; round++) await Task.Delay(120);
         root.UpdateLayout();
         log($"{name}: wird gezeichnet");
+        if (window is FlyoutWindow flyout) log($"{name}: {flyout.PanelView.LayoutReport()}");
         try
         {
             var bitmap = new RenderTargetBitmap();
