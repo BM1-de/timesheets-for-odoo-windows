@@ -71,7 +71,7 @@ public sealed partial class PanelView : UserControl, INotifyPropertyChanged
     public double NaturalHeight => Model.Screen switch
     {
         Screen.Login => UnconstrainedHeight(Login),
-        Screen.Main => Header.ActualHeight + Banners.ActualHeight + ContentStack.ActualHeight + Footer.ActualHeight,
+        Screen.Main => UnconstrainedHeight(DayPanel),
         _ => 104,
     };
 

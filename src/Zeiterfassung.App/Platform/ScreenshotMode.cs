@@ -26,6 +26,9 @@ public static class ScreenshotMode
 {
     public static bool IsRequested(string[] arguments) => arguments.Contains("--screenshots");
 
+    /// <summary>Sprache der Bilder; die App setzt sie beim Start, damit auch die Texte von WinUI passen.</summary>
+    public static string? Language(string[] arguments) => Argument(arguments, "--language") is { Length: > 0 } language ? language : null;
+
     /// <summary>Erscheinungsbild der Bilder; die App setzt es beim Start, später ginge es nicht mehr.</summary>
     public static ApplicationTheme? Theme(string[] arguments) => Argument(arguments, "--theme") switch
     {
@@ -64,11 +67,6 @@ public static class ScreenshotMode
     private static async Task CaptureAllAsync(string[] arguments, string folder, Action<string> log, Action<AppModel> setModel,
                                               Action<Updates> setUpdates)
     {
-        if (Argument(arguments, "--language") is { Length: > 0 } language)
-        {
-            Loc.Language = language;
-            Formatting.Culture = Formatting.MakeCulture(Loc.Language, System.Globalization.CultureInfo.GetCultureInfo(language));
-        }
         log($"Sprache {Loc.Language}, Kultur {Formatting.Culture.Name}");
         var zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
         var now = FixedNow;
@@ -116,18 +114,23 @@ public static class ScreenshotMode
         await Capture(window, folder, "05-bearbeiten", log);
         model.CancelEditing();
 
+        // Stoppen bucht die Zeit gerundet auf heute
+        await model.StopTimerAsync();
+        await Capture(window, folder, "06-gebucht", log);
+        model.DismissTimerNotice();
+
         // Gestern: Anwesenheit aufgeklappt
         model.ShowPreviousDay();
         await model.RefreshAsync(force: true);
         model.SetAttendanceListExpanded(true);
-        await Capture(window, folder, "06-gestern", log);
+        await Capture(window, folder, "07-gestern", log);
         model.ShowToday();
         await model.RefreshAsync(force: true);
 
         // Einstellungen
         var settings = new SettingsWindow();
         settings.Activate();
-        await Capture(settings, folder, "07-einstellungen", log);
+        await Capture(settings, folder, "08-einstellungen", log);
         settings.Close();
 
         log("Fertig");

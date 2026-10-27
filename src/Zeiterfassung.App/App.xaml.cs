@@ -31,7 +31,7 @@ public sealed partial class App : Application
     public App(string[] arguments)
     {
         this.arguments = arguments;
-        ConfigureLanguage();
+        ConfigureLanguage(ScreenshotMode.IsRequested(arguments) ? ScreenshotMode.Language(arguments) : null);
         AppInfo.Version = PackageInfo.Version;
         AppInfo.IsStore = PackageInfo.IsStore;
         if (ScreenshotMode.IsRequested(arguments) && ScreenshotMode.Theme(arguments) is { } theme) RequestedTheme = theme;
@@ -50,20 +50,24 @@ public sealed partial class App : Application
 
     public Updates Updates { get; private set; } = null!;
 
-    /// <summary>Sprache der App aus der Liste der Windows-Sprachen, Datums- und Zeitformate aus der Region.</summary>
-    private static void ConfigureLanguage()
+    /// <summary>
+    /// Sprache der App aus der Liste der Windows-Sprachen, Datums- und Zeitformate aus der Region. Bildschirmfotos
+    /// geben die Sprache vor, samt ihrer üblichen Formate.
+    /// </summary>
+    private static void ConfigureLanguage(string? forced)
     {
         IEnumerable<string> preferred;
         try
         {
-            preferred = Windows.System.UserProfile.GlobalizationPreferences.Languages;
+            preferred = forced is null ? Windows.System.UserProfile.GlobalizationPreferences.Languages : [forced];
         }
         catch (Exception)
         {
             preferred = [CultureInfo.CurrentUICulture.Name];
         }
         Loc.Language = Loc.Choose(preferred);
-        Formatting.Culture = Formatting.MakeCulture(Loc.Language, CultureInfo.CurrentCulture);
+        var region = forced is null ? CultureInfo.CurrentCulture : CultureInfo.GetCultureInfo(Loc.Language);
+        Formatting.Culture = Formatting.MakeCulture(Loc.Language, region);
         CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(Loc.Language);
         try
         {
