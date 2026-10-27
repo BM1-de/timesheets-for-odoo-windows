@@ -110,12 +110,11 @@ public sealed partial class FlyoutWindow : Window
         var width = (int)Math.Round(PanelWidth * scale);
         var height = (int)Math.Round(Math.Max(120, Panel.NaturalHeight) * scale);
         if (!IsForScreenshots) height = Math.Min(height, workArea.Height - 2 * margin);
-        // Ohne Titelleiste reicht der Inhalt auch über den Streifen, den Windows für sie freihält; die Fläche des
-        // Inhalts ist deshalb um diesen Streifen höher als ClientSize.
-        var caption = Content?.XamlRoot is { } root
-            ? Math.Max(0, (int)Math.Round(root.Size.Height * scale) - AppWindow.ClientSize.Height)
-            : 0;
-        AppWindow.ResizeClient(new SizeInt32(width, height - caption));
+        // ResizeClient rechnet mit einer Titelleiste, die das Fenster nicht hat, und machte die Fläche um deren Höhe zu
+        // hoch. Deshalb die Außengröße aus dem Rahmen, wie er tatsächlich ist.
+        var chromeWidth = AppWindow.Size.Width - AppWindow.ClientSize.Width;
+        var chromeHeight = AppWindow.Size.Height - AppWindow.ClientSize.Height;
+        AppWindow.Resize(new SizeInt32(width + chromeWidth, height + chromeHeight));
 
         // Den Abstand zum Rand hält das sichtbare Fenster; der Rahmen darum ist zum Teil unsichtbar.
         var frame = Native.InvisibleFrame(this);
