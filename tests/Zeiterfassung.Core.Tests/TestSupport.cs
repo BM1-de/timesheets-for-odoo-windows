@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using System.Collections.Concurrent;
+using System.Text.Json.Nodes;
 using Zeiterfassung.Demo;
 using Zeiterfassung.Model;
 using Zeiterfassung.Odoo;
@@ -116,9 +117,10 @@ public static class Models
         new(new Preferences(settings ?? new MemorySettingsStore()), http ?? odoo.Client(), secrets ?? new MemorySecretStore(),
             TestClock.Zone, () => clock?.Now ?? TestClock.Now);
 
-    public static async Task<AppModel> SignedIn(FakeOdoo odoo, IHttpSender? http = null, MovingClock? clock = null)
+    public static async Task<AppModel> SignedIn(FakeOdoo odoo, IHttpSender? http = null, MovingClock? clock = null,
+                                                ISettingsStore? settings = null, MemorySecretStore? secrets = null)
     {
-        var model = Make(odoo, http: http, clock: clock);
+        var model = Make(odoo, secrets, http, clock, settings);
         await model.SignInAsync("odoo.example.de", odoo.ApiKey, odoo.Mode == FakeOdooMode.Odoo19 ? null : odoo.Login, null);
         model.FinishSignIn();
         await model.RefreshAsync(force: true);
@@ -132,5 +134,68 @@ public static class Models
         await model.LoadTasksAsync(2);
         model.DraftDescription = "Plugin-Updates";
         model.DraftDurationText = "0:15";
+    }
+
+    /// <summary>Feld „von“ beim Bearbeiten einer Anwesenheit, wie <c>model.attendanceEditor?.from = text</c>.</summary>
+    public static void SetEditorFrom(this AppModel model, string text) =>
+        model.SetAttendanceEditorTimes(text, model.AttendanceEditor?.To ?? "");
+
+    /// <summary>Feld „bis“ beim Bearbeiten einer Anwesenheit, wie <c>model.attendanceEditor?.to = text</c>.</summary>
+    public static void SetEditorTo(this AppModel model, string text) =>
+        model.SetAttendanceEditorTimes(model.AttendanceEditor?.From ?? "", text);
+}
+
+/// <summary>Datenzugriff ohne Modell: JSON-2 wie Odoo 19, sonst JSON-RPC mit der Datenbank „demo“.</summary>
+public static class Services
+{
+    public const string Server = "https://odoo.example.de";
+
+    public static OdooService For(FakeOdoo odoo)
+    {
+        IOdooTransport transport = odoo.Mode == FakeOdooMode.Odoo19
+            ? new Json2Transport(Server, odoo.ApiKey, null, odoo.Client())
+            : new JsonRpcTransport(Server, "demo", odoo.Uid, odoo.ApiKey, odoo.Client());
+        return new OdooService(transport, odoo.Uid);
+    }
+}
+
+/// <summary>Datensätze für das Odoo im Arbeitsspeicher, so knapp wie in den Swift-Tests.</summary>
+public static class Fake
+{
+    public static FakeOdoo.Line Line(int id, string date, string name, int projectId, int? taskId, double hours,
+                                     int? companyId = null, int? employeeId = null, bool invoiced = false) =>
+        new()
+        {
+            Id = id, Date = date, Name = name, ProjectId = projectId, TaskId = taskId, Hours = hours,
+            CompanyId = companyId, EmployeeId = employeeId, Invoiced = invoiced,
+        };
+
+    public static FakeOdoo.Attendance Attendance(int id, string checkIn, string? checkOut, string? inMode = null,
+                                                 string? outMode = null) =>
+        new() { Id = id, CheckIn = checkIn, CheckOut = checkOut, InMode = inMode, OutMode = outMode };
+}
+
+/// <summary>Prüfungen, die die Swift-Tests mit <c>#expect</c> schreiben und xUnit so nicht mitbringt.</summary>
+public static class Expect
+{
+    /// <summary>Wie <c>try #require(x)</c>: Fehlt der Wert, bricht der Test ab, sonst geht es mit ihm weiter.</summary>
+    public static T Require<T>(T? value) where T : class
+    {
+        Assert.NotNull(value);
+        return value;
+    }
+
+    /// <summary>Wie <c>#expect(throws: OdooError.x(detail))</c>: Art und Meldung des Fehlers müssen stimmen.</summary>
+    public static async Task OdooError(OdooErrorKind kind, string detail, Func<Task> action)
+    {
+        var error = await Assert.ThrowsAsync<OdooException>(action);
+        Assert.Equal((kind, detail), (error.Kind, error.Detail));
+    }
+
+    /// <summary>JSON gleichen Inhalts, wie <c>==</c> auf <c>JSONValue</c>.</summary>
+    public static void Json(JsonNode? expected, JsonNode? actual)
+    {
+        if (JsonNode.DeepEquals(expected, actual)) return;
+        Assert.Fail($"JSON verschieden.\nErwartet: {expected?.ToJsonString() ?? "null"}\nErhalten: {actual?.ToJsonString() ?? "null"}");
     }
 }
