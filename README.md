@@ -210,7 +210,14 @@ zu Odoo S.A. Das App-Symbol ist eigenes Werk und verwendet kein Logo von Odoo.
 Copyright © 2026 Baumgärtner Marketing GmbH. Lizenziert unter der
 [GNU Affero General Public License, Version 3 oder neuer](LICENSE).
 
-Die App enthält das [Windows App SDK](https://github.com/microsoft/WindowsAppSDK) von Microsoft.
+Die App enthält das [Windows App SDK](https://github.com/microsoft/WindowsAppSDK) von Microsoft, das unter den
+Lizenzbedingungen von Microsoft steht und mit dem Paket ausgeliefert wird. Damit das neben der AGPL zulässig ist,
+gilt diese zusätzliche Erlaubnis nach Abschnitt 7 der AGPL:
+
+> Additional permission under GNU AGPL version 3 section 7: If you modify this Program, or any covered work, by
+> linking or combining it with the Microsoft Windows App SDK (or a modified version of that library), containing
+> parts covered by the terms of the Microsoft Software License Terms for the Windows App SDK, the licensors of this
+> Program grant you additional permission to convey the resulting work.
 
 *English: A Windows system tray app to log your own timesheets and attendance in Odoo 17–19:
 pick project and task, enter the duration or time it with start and stop, check in and out with
