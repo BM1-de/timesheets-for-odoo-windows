@@ -34,7 +34,7 @@ public static class Program
         {
             var context = new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread());
             SynchronizationContext.SetSynchronizationContext(context);
-            _ = new App(args);
+            new App(args);
         });
         return 0;
     }

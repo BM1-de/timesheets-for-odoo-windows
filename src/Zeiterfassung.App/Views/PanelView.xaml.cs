@@ -647,7 +647,7 @@ public sealed partial class PanelView : UserControl, INotifyPropertyChanged
         {
             case VirtualKey.Enter:
                 e.Handled = true;
-                if (sender == DurationBox) Model.NormalizeDuration();
+                if (ReferenceEquals(sender, DurationBox)) Model.NormalizeDuration();
                 await SubmitAsync();
                 break;
             case VirtualKey.Escape when IsEditing:
