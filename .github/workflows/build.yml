@@ -29,29 +29,47 @@ jobs:
           dotnet-version: 10.0.x
       - uses: microsoft/setup-msbuild@v3
 
-      - name: Bauen ohne Paket
+      - name: Testzertifikat
         shell: pwsh
-        run: dotnet build src/Zeiterfassung.App -c Release -p:Platform=x64 -r win-x64 -p:WindowsPackageType=None -o build/lose
+        run: |
+          # Selbst ausgestellt auf den Herausgeber im Manifest, nur damit Windows das Paket auf diesem Rechner installiert.
+          $publisher = ([xml](Get-Content -Raw src/Zeiterfassung.App/Package.appxmanifest)).Package.Identity.Publisher
+          $cert = New-SelfSignedCertificate -Type Custom -Subject $publisher -KeyUsage DigitalSignature `
+            -FriendlyName 'Zeiterfassung Prüfung' -CertStoreLocation Cert:\CurrentUser\My `
+            -TextExtension @('2.5.29.37={text}1.3.6.1.5.5.7.3.3', '2.5.29.19={text}')
+          New-Item -ItemType Directory -Force build | Out-Null
+          Export-Certificate -Cert $cert -FilePath build\pruefung.cer | Out-Null
+          Import-Certificate -FilePath build\pruefung.cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople | Out-Null
+          "THUMBPRINT=$($cert.Thumbprint)" >> $env:GITHUB_ENV
 
-      - name: Paket (MSIX, unsigniert)
+      - name: Paket (MSIX)
         shell: pwsh
         run: >
           msbuild src/Zeiterfassung.App/Zeiterfassung.App.csproj /restore /v:minimal
           /p:Configuration=Release /p:Platform=x64 /p:RuntimeIdentifier=win-x64
           /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxBundle=Never
-          /p:AppxPackageSigningEnabled=false /p:AppxPackageDir=$PWD\build\msix\
+          /p:AppxPackageSigningEnabled=true /p:PackageCertificateThumbprint=$env:THUMBPRINT
+          /p:AppxPackageDir=$PWD\build\msix\
+
+      - name: Installieren
+        shell: pwsh
+        run: |
+          $package = Get-ChildItem build/msix -Recurse -Filter *.msix | Select-Object -First 1
+          Write-Host "$($package.Name): $([math]::Round($package.Length / 1MB, 1)) MB"
+          Add-AppxPackage -Path $package.FullName
+          Get-AppxPackage -Name BM1.ZeiterfassungFuerOdoo | Format-List Name, Version, PackageFamilyName, InstallLocation, SignatureKind
 
       - name: Bildschirmfotos
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force build/bilder | Out-Null
-          Get-ChildItem build/lose -Filter *.pri | Format-Table Name, Length
-          # Ohne Paket sucht WinUI seine Ressourcen im Arbeitsordner; deshalb aus dem Ordner der App starten.
-          $app = Start-Process -FilePath "$PWD\build\lose\Zeiterfassung.exe" -WorkingDirectory "$PWD\build\lose" -ArgumentList '--screenshots', "$PWD\build\bilder" -PassThru
-          if (-not $app.WaitForExit(240000)) { $app.Kill(); Write-Warning 'Bildschirmfotos hängen' }
-          Write-Host "Beendet mit $($app.ExitCode)"
+          # Über den Ausführungsalias startet Windows die installierte App mit ihrer Paketidentität.
+          Start-Process -FilePath "$env:LOCALAPPDATA\Microsoft\WindowsApps\Zeiterfassung.exe" -ArgumentList '--screenshots', "$PWD\build\bilder"
+          $deadline = (Get-Date).AddSeconds(240)
+          do { Start-Sleep -Seconds 2 } while ((Get-Process Zeiterfassung -ErrorAction SilentlyContinue) -and (Get-Date) -lt $deadline)
+          if (Get-Process Zeiterfassung -ErrorAction SilentlyContinue) { Write-Warning 'Bildschirmfotos hängen'; Get-Process Zeiterfassung | Stop-Process -Force }
           Get-ChildItem build/bilder | Format-Table Name, Length
-          foreach ($file in 'build/bilder/protokoll.txt', 'build/bilder/fehler.log', "$env:LOCALAPPDATA\Zeiterfassung\fehler.log") {
+          foreach ($file in 'build/bilder/protokoll.txt', 'build/bilder/fehler.log') {
             if (Test-Path $file) { Write-Host "--- $file"; Get-Content $file }
           }
           Get-WinEvent -LogName Application -MaxEvents 20 -ErrorAction SilentlyContinue |
