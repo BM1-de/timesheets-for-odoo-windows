@@ -45,7 +45,9 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force build/bilder | Out-Null
-          $app = Start-Process -FilePath build/lose/Zeiterfassung.exe -ArgumentList '--screenshots', "$PWD\build\bilder" -PassThru
+          Get-ChildItem build/lose -Filter *.pri | Format-Table Name, Length
+          # Ohne Paket sucht WinUI seine Ressourcen im Arbeitsordner; deshalb aus dem Ordner der App starten.
+          $app = Start-Process -FilePath "$PWD\build\lose\Zeiterfassung.exe" -WorkingDirectory "$PWD\build\lose" -ArgumentList '--screenshots', "$PWD\build\bilder" -PassThru
           if (-not $app.WaitForExit(240000)) { $app.Kill(); Write-Warning 'Bildschirmfotos hängen' }
           Write-Host "Beendet mit $($app.ExitCode)"
           Get-ChildItem build/bilder | Format-Table Name, Length
