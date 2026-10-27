@@ -35,6 +35,8 @@ public sealed partial class App : Application
         AppInfo.Version = PackageInfo.Version;
         AppInfo.IsStore = PackageInfo.IsStore;
         InitializeComponent();
+        // Die App lebt im Infobereich: Schließt man das letzte Fenster, läuft sie weiter, bis „Beenden“ sie beendet.
+        DispatcherShutdownMode = DispatcherShutdownMode.OnExplicitShutdown;
         UnhandledException += (_, e) => ErrorLog.Write(e.Exception, e.Message);
         // Fehlt eine Ressource im XAML, meldet WinUI beim Laden nur „XAML parsing failed“; das Ereignis nennt den Namen.
         DebugSettings.IsXamlResourceReferenceTracingEnabled = ScreenshotMode.IsRequested(arguments);
