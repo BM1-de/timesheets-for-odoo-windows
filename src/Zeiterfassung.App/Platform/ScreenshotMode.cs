@@ -78,7 +78,7 @@ public static class ScreenshotMode
         Probe("PanelView", () => new PanelView(), log);
         Probe("SettingsWindow", () => new SettingsWindow().Close(), log);
         log("Fenster wird angelegt");
-        var window = new FlyoutWindow { KeepsOpen = true };
+        var window = new FlyoutWindow { IsForScreenshots = true };
         log("Fenster angelegt");
         await model.StartAsync();
         window.ShowNear(null);
@@ -151,7 +151,9 @@ public static class ScreenshotMode
         if (root is Microsoft.UI.Xaml.Controls.Panel panel)
         {
             // Acryl und Mica kommen auf Bildschirmfotos nicht mit; dafür der feste Grund des Erscheinungsbilds.
-            panel.Background = Application.Current.Resources["SolidBackgroundFillColorBaseBrush"] as Brush;
+            panel.Background = new SolidColorBrush(root.ActualTheme == ElementTheme.Dark
+                ? Microsoft.UI.ColorHelper.FromArgb(255, 0x20, 0x20, 0x20)
+                : Microsoft.UI.ColorHelper.FromArgb(255, 0xF3, 0xF3, 0xF3));
         }
         for (var round = 0; round < 8; round++) await Task.Delay(120);
         root.UpdateLayout();

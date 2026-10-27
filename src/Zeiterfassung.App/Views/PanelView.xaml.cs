@@ -70,10 +70,18 @@ public sealed partial class PanelView : UserControl, INotifyPropertyChanged
     /// <summary>Wie hoch der ganze Inhalt wäre, ohne zu scrollen.</summary>
     public double NaturalHeight => Model.Screen switch
     {
-        Screen.Login => Login.ActualHeight,
+        Screen.Login => UnconstrainedHeight(Login),
         Screen.Main => Header.ActualHeight + Banners.ActualHeight + ContentStack.ActualHeight + Footer.ActualHeight,
         _ => 104,
     };
+
+    /// <summary>Höhe, die ein Element ohne Grenze bräuchte; ActualHeight ist höchstens so hoch wie das Fenster.</summary>
+    private static double UnconstrainedHeight(FrameworkElement element)
+    {
+        var width = element.ActualWidth > 0 ? element.ActualWidth : FlyoutWindow.PanelWidth;
+        element.Measure(new Windows.Foundation.Size(width, double.PositiveInfinity));
+        return element.DesiredSize.Height;
+    }
 
     private void Part_SizeChanged(object sender, SizeChangedEventArgs e) => ContentHeightChanged?.Invoke();
 
@@ -275,6 +283,22 @@ public sealed partial class PanelView : UserControl, INotifyPropertyChanged
     public bool ShowsAttendanceToggle => Model.TimesheetsActive && Summary.Rows.Count > 0;
 
     public bool HasAttention => Summary.Attention is not null;
+
+    // Sichtbarkeit als Wahrheitswert: Ist ein Argument null, ruft x:Bind die Funktion nicht auf, und die Zeile bliebe
+    // im alten Zustand stehen.
+    public bool HasSummaryButton => Summary.ButtonTitle is not null;
+
+    public bool HasUnbooked => Summary.UnbookedText is not null;
+
+    public bool HasSummaryNote => Summary.Note is not null;
+
+    public bool HasStampError => !string.IsNullOrEmpty(Model.StampError);
+
+    public bool HasProjectCompany => !string.IsNullOrEmpty(Model.SelectedProjectCompanyText);
+
+    public bool HasEditingEntry => Model.EditingEntry is not null;
+
+    public bool HasOdooLink => !string.IsNullOrEmpty(Model.OdooWebUrl);
 
     public string PeriodsLabel => Loc.T("%lld Zeiträume", Summary.Rows.Count(row => row.Kind == AttendanceRowKind.Period));
 

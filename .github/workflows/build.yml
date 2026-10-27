@@ -62,28 +62,33 @@ jobs:
       - name: Bildschirmfotos
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force build/bilder | Out-Null
-          # Über den Ausführungsalias startet Windows die installierte App mit ihrer Paketidentität.
-          Start-Process -FilePath "$env:LOCALAPPDATA\Microsoft\WindowsApps\Zeiterfassung.exe" -ArgumentList '--screenshots', "$PWD\build\bilder"
-          # Warten, bis das Protokoll fertig ist oder die App seit einigen Sekunden nicht mehr läuft.
-          $deadline = (Get-Date).AddSeconds(240)
-          $gone = 0
-          while ((Get-Date) -lt $deadline -and $gone -lt 3) {
-            Start-Sleep -Seconds 2
-            if (Select-String -Path build/bilder/protokoll.txt -Pattern '^(Fertig|Abbruch)' -Quiet -ErrorAction SilentlyContinue) { break }
-            if (Get-Process Zeiterfassung -ErrorAction SilentlyContinue) { $gone = 0 } else { $gone++ }
-          }
-          Start-Sleep -Seconds 5
-          if (Get-Process Zeiterfassung -ErrorAction SilentlyContinue) { Write-Warning 'App läuft noch'; Get-Process Zeiterfassung | Stop-Process -Force }
-          Get-ChildItem build/bilder | Format-Table Name, Length
-          foreach ($file in 'build/bilder/protokoll.txt', 'build/bilder/fehler.log') {
-            if (Test-Path $file) { Write-Host "--- $file"; Get-Content $file }
+          $failed = $false
+          foreach ($language in 'de', 'en') {
+            $folder = "$PWD\build\bilder\$language"
+            New-Item -ItemType Directory -Force $folder | Out-Null
+            # Über den Ausführungsalias startet Windows die installierte App mit ihrer Paketidentität.
+            Start-Process -FilePath "$env:LOCALAPPDATA\Microsoft\WindowsApps\Zeiterfassung.exe" -ArgumentList '--screenshots', $folder, '--language', $language
+            # Warten, bis das Protokoll fertig ist oder die App seit einigen Sekunden nicht mehr läuft.
+            $deadline = (Get-Date).AddSeconds(240)
+            $gone = 0
+            while ((Get-Date) -lt $deadline -and $gone -lt 3) {
+              Start-Sleep -Seconds 2
+              if (Select-String -Path "$folder\protokoll.txt" -Pattern '^(Fertig|Abbruch)' -Quiet -ErrorAction SilentlyContinue) { break }
+              if (Get-Process Zeiterfassung -ErrorAction SilentlyContinue) { $gone = 0 } else { $gone++ }
+            }
+            Start-Sleep -Seconds 5
+            if (Get-Process Zeiterfassung -ErrorAction SilentlyContinue) { Write-Warning 'App läuft noch'; Get-Process Zeiterfassung | Stop-Process -Force }
+            Get-ChildItem $folder | Format-Table Name, Length
+            foreach ($file in "$folder\protokoll.txt", "$folder\fehler.log") {
+              if (Test-Path $file) { Write-Host "--- $file"; Get-Content $file }
+            }
+            # Fertig ist der Lauf erst, wenn das Protokoll bis zum Ende kam.
+            if (-not (Select-String -Path "$folder\protokoll.txt" -Pattern '^Fertig$' -Quiet -ErrorAction SilentlyContinue)) { $failed = $true }
           }
           Get-WinEvent -LogName Application -MaxEvents 20 -ErrorAction SilentlyContinue |
             Where-Object { $_.ProviderName -in '.NET Runtime', 'Application Error', 'Windows Error Reporting' } |
             Format-List TimeCreated, ProviderName, Message
-          # Fertig ist der Lauf erst, wenn das Protokoll bis zum Ende kam.
-          if (-not (Select-String -Path build/bilder/protokoll.txt -Pattern '^Fertig$' -Quiet -ErrorAction SilentlyContinue)) { exit 1 }
+          if ($failed) { exit 1 }
 
       - uses: actions/upload-artifact@v7
         if: always()

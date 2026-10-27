@@ -115,7 +115,7 @@ public sealed partial class LoginView : UserControl, INotifyPropertyChanged
 
     public bool IsConnecting { get; private set; }
 
-    public string? ErrorText { get; private set; }
+    public string ErrorText { get; private set; } = "";
 
     public Capabilities? Result { get; private set; }
 
@@ -156,7 +156,7 @@ public sealed partial class LoginView : UserControl, INotifyPropertyChanged
     {
         if (model is null || !CanConnect) return;
         IsConnecting = true;
-        ErrorText = null;
+        ErrorText = "";
         Changed();
         try
         {

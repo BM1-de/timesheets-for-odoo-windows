@@ -59,8 +59,8 @@ public sealed partial class FlyoutWindow : Window
 
     public bool IsShown => isShown;
 
-    /// <summary>Bleibt offen, auch ohne Fokus; für Bildschirmfotos.</summary>
-    public bool KeepsOpen { get; set; }
+    /// <summary>Für Bildschirmfotos: bleibt ohne Fokus offen und zeigt den ganzen Inhalt, auch über den Bildschirm hinaus.</summary>
+    public bool IsForScreenshots { get; set; }
 
     public PanelView PanelView => Panel;
 
@@ -108,16 +108,20 @@ public sealed partial class FlyoutWindow : Window
         var scale = Native.ScaleFor(this);
         var margin = (int)Math.Round(Margin * scale);
         var width = (int)Math.Round(PanelWidth * scale);
-        var natural = Panel.NaturalHeight;
-        var height = (int)Math.Round(Math.Max(120, natural) * scale) + 2;
-        height = Math.Min(height, workArea.Height - 2 * margin);
+        var height = (int)Math.Round(Math.Max(120, Panel.NaturalHeight) * scale);
+        if (!IsForScreenshots) height = Math.Min(height, workArea.Height - 2 * margin);
+        AppWindow.ResizeClient(new SizeInt32(width, height));
 
+        // Den Abstand zum Rand hält die Fläche selbst; der Rahmen darum ist zum Teil unsichtbar.
+        var outer = AppWindow.Size;
+        var frameX = (outer.Width - width) / 2;
+        var frameY = (outer.Height - height) / 2;
         var point = AnchorPoint();
         var right = point.X > workArea.X + workArea.Width / 2;
         var bottom = point.Y > workArea.Y + workArea.Height / 2;
         var x = right ? workArea.X + workArea.Width - width - margin : workArea.X + margin;
         var y = bottom ? workArea.Y + workArea.Height - height - margin : workArea.Y + margin;
-        AppWindow.MoveAndResize(new RectInt32(x, y, width, height));
+        AppWindow.Move(new PointInt32(x - frameX, y - frameY));
     }
 
     private void OnActivated(object sender, WindowActivatedEventArgs args)
@@ -126,7 +130,7 @@ public sealed partial class FlyoutWindow : Window
         // Offene Rückfragen, Menüs und Auswahllisten gehören zum Fenster; erst wenn wirklich etwas anderes den Fokus hat.
         DispatcherQueue.TryEnqueue(() =>
         {
-            if (isShown && !KeepsOpen && !Native.IsForeground(this)) HideFlyout();
+            if (isShown && !IsForScreenshots && !Native.IsForeground(this)) HideFlyout();
         });
     }
 

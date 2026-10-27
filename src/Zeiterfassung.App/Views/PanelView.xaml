@@ -405,7 +405,7 @@
                                     <controls:ProgressRing Grid.Column="2" Width="16" Height="16" IsActive="{x:Bind Model.IsStamping, Mode=OneWay}"
                                                            Visibility="{x:Bind z:Show.If(Model.IsStamping), Mode=OneWay}" />
                                     <Button Grid.Column="3" Content="{x:Bind Summary.ButtonTitle, Mode=OneWay}" FontSize="12" Padding="12,4,12,5"
-                                            Visibility="{x:Bind z:Show.IfText(Summary.ButtonTitle), Mode=OneWay}"
+                                            Visibility="{x:Bind z:Show.If(HasSummaryButton), Mode=OneWay}"
                                             IsEnabled="{x:Bind z:Show.Not(Model.IsStamping), Mode=OneWay}" Click="Stamp_Click" />
                                     <Button Grid.Column="3" Content="{z:Str Key='Nachtragen …'}" FontSize="12" Padding="12,4,12,5"
                                             Visibility="{x:Bind z:Show.If(OffersAddingInHeader), Mode=OneWay}" Click="AddPeriod_Click" />
@@ -424,7 +424,7 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="{z:Str Key='Zeiten des Tages'}" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center"
-                                                    Visibility="{x:Bind z:Show.IfText(Summary.Attention), Mode=OneWay}">
+                                                    Visibility="{x:Bind z:Show.If(HasAttention), Mode=OneWay}">
                                             <Ellipse Width="6" Height="6" Fill="{ThemeResource SystemFillColorCautionBrush}" />
                                             <TextBlock Text="{x:Bind Summary.Attention, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}"
                                                        Foreground="{ThemeResource SystemFillColorCautionBrush}" />
@@ -460,14 +460,14 @@
 
                                 <Grid Padding="12,7,12,7" Background="{ThemeResource SubtleFillColorTertiaryBrush}"
                                       BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
-                                      Visibility="{x:Bind z:Show.IfText(Summary.UnbookedText), Mode=OneWay}">
+                                      Visibility="{x:Bind z:Show.If(HasUnbooked), Mode=OneWay}">
                                     <TextBlock Text="{z:Str Key='Noch nicht auf Projekte gebucht'}" Style="{StaticResource SecondaryCaptionStyle}" />
                                     <TextBlock Text="{x:Bind Summary.UnbookedText, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" FontWeight="SemiBold"
                                                HorizontalAlignment="Right" Typography.NumeralAlignment="Tabular" />
                                 </Grid>
 
                                 <Grid Padding="12,8,12,9" ColumnSpacing="7" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
-                                      Visibility="{x:Bind z:Show.IfText(Summary.Note), Mode=OneWay}">
+                                      Visibility="{x:Bind z:Show.If(HasSummaryNote), Mode=OneWay}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
@@ -480,7 +480,7 @@
 
                                 <TextBlock Padding="12,7,12,7" Text="{x:Bind Model.StampError, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}"
                                            TextWrapping="Wrap" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
-                                           Visibility="{x:Bind z:Show.IfText(Model.StampError), Mode=OneWay}" />
+                                           Visibility="{x:Bind z:Show.If(HasStampError), Mode=OneWay}" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -588,7 +588,7 @@
                                                 <TextBlock Text="{x:Bind ProjectLabel, Mode=OneWay}" Foreground="{x:Bind ProjectLabelBrush, Mode=OneWay}"
                                                            TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Text="{x:Bind Model.SelectedProjectCompanyText, Mode=OneWay}" Style="{StaticResource SecondaryCaptionStyle}"
-                                                           TextTrimming="CharacterEllipsis" Visibility="{x:Bind z:Show.IfText(Model.SelectedProjectCompanyText), Mode=OneWay}" />
+                                                           TextTrimming="CharacterEllipsis" Visibility="{x:Bind z:Show.If(HasProjectCompany), Mode=OneWay}" />
                                             </StackPanel>
                                             <FontIcon Grid.Column="1" Glyph="&#xE70D;" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                         </Grid>
@@ -632,7 +632,7 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <FontIcon Glyph="&#xE8E4;" FontSize="16" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <TextBox x:Name="DescriptionBox" Grid.Column="1" Margin="-6,0,0,0" BorderThickness="0" Background="Transparent"
+                                    <TextBox x:Name="DescriptionBox" Grid.Column="1" Margin="-6,0,0,0" BorderThickness="0" Background="Transparent" VerticalAlignment="Center"
                                              Text="{x:Bind DraftDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                              PlaceholderText="{x:Bind DescriptionPlaceholder, Mode=OneWay}"
                                              IsEnabled="{x:Bind z:Show.Not(Model.EditingIsLocked), Mode=OneWay}" KeyDown="FormField_KeyDown"
@@ -650,7 +650,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <FontIcon Glyph="&#xE916;" FontSize="16" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <TextBox x:Name="DurationBox" Grid.Column="1" Width="64" MinWidth="64" TextAlignment="Right" InputScope="Number"
+                                    <TextBox x:Name="DurationBox" Grid.Column="1" Width="64" MinWidth="64" TextAlignment="Right" InputScope="Number" VerticalAlignment="Center"
                                              PlaceholderText="0:00" Text="{x:Bind DraftDuration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                              IsEnabled="{x:Bind z:Show.Not(FormFixed), Mode=OneWay}" LostFocus="DurationBox_LostFocus" KeyDown="FormField_KeyDown"
                                              AutomationProperties.Name="{z:Str Key='Dauer in Stunden und Minuten'}" />
@@ -675,7 +675,7 @@
 
                                 <!-- Datum beim Bearbeiten -->
                                 <Grid Padding="12,0,8,0" MinHeight="44" ColumnSpacing="10" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
-                                      BorderThickness="0,1,0,0" Visibility="{x:Bind z:Show.IfSet(Model.EditingEntry), Mode=OneWay}">
+                                      BorderThickness="0,1,0,0" Visibility="{x:Bind z:Show.If(HasEditingEntry), Mode=OneWay}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
@@ -774,7 +774,7 @@
             <!-- Fuß: In Odoo öffnen, Einstellungen -->
             <Grid x:Name="Footer" Grid.Row="3" Padding="10,6,8,6" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
                   SizeChanged="Part_SizeChanged">
-                <HyperlinkButton Padding="6,4,6,4" FontSize="12" Click="OpenOdoo_Click" Visibility="{x:Bind z:Show.IfText(Model.OdooWebUrl), Mode=OneWay}"
+                <HyperlinkButton Padding="6,4,6,4" FontSize="12" Click="OpenOdoo_Click" Visibility="{x:Bind z:Show.If(HasOdooLink), Mode=OneWay}"
                                  ToolTipService.ToolTip="{x:Bind Model.OdooWebUrl, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="5">
                         <TextBlock Text="{z:Str Key='In Odoo öffnen'}" />
