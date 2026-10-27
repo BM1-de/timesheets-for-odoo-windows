@@ -71,6 +71,11 @@ public static class ScreenshotMode
         setModel(model);
         setUpdates(new Updates(preferences));
 
+        // Scheitert das XAML einer Ansicht, meldet WinUI beim Fenster nur „XAML parsing failed“; einzeln angelegt zeigt
+        // sich, welche Ansicht es ist.
+        Probe("LoginView", () => new LoginView(), log);
+        Probe("PanelView", () => new PanelView(), log);
+        Probe("SettingsWindow", () => new SettingsWindow().Close(), log);
         log("Fenster wird angelegt");
         var window = new FlyoutWindow { KeepsOpen = true };
         await model.StartAsync();
@@ -120,6 +125,19 @@ public static class ScreenshotMode
         settings.Close();
 
         log("Fertig");
+    }
+
+    private static void Probe(string name, Action create, Action<string> log)
+    {
+        try
+        {
+            create();
+            log($"{name}: angelegt");
+        }
+        catch (Exception error)
+        {
+            log($"{name}: {error.GetType().Name} 0x{error.HResult:X8} {error.Message} {error.InnerException}");
+        }
     }
 
     /// <summary>Wartet, bis das Fenster gezeichnet ist, und speichert seinen Inhalt als PNG.</summary>

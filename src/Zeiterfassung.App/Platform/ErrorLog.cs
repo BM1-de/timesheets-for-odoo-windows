@@ -16,15 +16,17 @@ internal static class ErrorLog
     public static string Folder { get; set; } =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Zeiterfassung");
 
-    public static void Write(Exception error, string? context = null)
+    public static void Write(Exception error, string? context = null) => Write(error.ToString(), context);
+
+    public static void Write(string text, string? context = null)
     {
-        System.Diagnostics.Debug.WriteLine($"Zeiterfassung: {context} {error}");
+        System.Diagnostics.Debug.WriteLine($"Zeiterfassung: {context} {text}");
         try
         {
             Directory.CreateDirectory(Folder);
             var path = Path.Combine(Folder, "fehler.log");
             if (File.Exists(path) && new FileInfo(path).Length > MaximumSize) File.Delete(path);
-            File.AppendAllText(path, $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz} {context}{Environment.NewLine}{error}{Environment.NewLine}{Environment.NewLine}");
+            File.AppendAllText(path, $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz} {context}{Environment.NewLine}{text}{Environment.NewLine}{Environment.NewLine}");
         }
         catch (Exception writeError) when (writeError is IOException or UnauthorizedAccessException)
         {

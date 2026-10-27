@@ -1,0 +1,236 @@
+# Zeiterfassung für Odoo (Windows) – Release bauen und veröffentlichen
+# Copyright (C) 2026 Baumgärtner Marketing GmbH
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Ein Tag v<Version> baut die App für x64 und ARM64, fasst beide Pakete zu einem MSIX-Bündel zusammen, signiert es mit
+# Azure Artifact Signing, schreibt die App-Installer-Datei und legt den Release an. Sind die Angaben aus dem Partner
+# Center hinterlegt, entsteht daneben das Bündel für den Microsoft Store (Artefakt „store“). Von Hand gestartet
+# (Actions › Release › Run workflow) entstehen nur Artefakte; ohne Zugang zu Artifact Signing ist das Bündel nicht
+# signiert.
+#
+# Variablen: MSIX_PUBLISHER, AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID,
+#            SIGNING_ENDPOINT, SIGNING_ACCOUNT, SIGNING_PROFILE,
+#            STORE_IDENTITY_NAME, STORE_PUBLISHER, STORE_PUBLISHER_DISPLAY_NAME (für den Store)
+# Umgebung:  release (Anmeldung bei Azure über OpenID Connect)
+# Einrichtung: RELEASE.md
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IS_RELEASE: ${{ github.ref_type == 'tag' }}
+
+jobs:
+  setup:
+    name: Tests und Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Version bestimmen
+        id: version
+        run: |
+          if [[ "$IS_RELEASE" == "true" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props)
+          fi
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Version „$VERSION“ hat nicht die Form 1.2.3"; exit 1; }
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Abschnitt im Changelog
+        if: env.IS_RELEASE == 'true'
+        run: grep -q "^## ${{ steps.version.outputs.version }} " CHANGELOG.md || { echo "::error::CHANGELOG.md hat keinen Abschnitt für ${{ steps.version.outputs.version }}"; exit 1; }
+
+      - name: Tests
+        run: dotnet test --project tests/Zeiterfassung.Core.Tests
+
+      - name: Pakete festlegen
+        id: matrix
+        env:
+          HAS_STORE: ${{ vars.STORE_IDENTITY_NAME != '' }}
+        run: |
+          VARIANTS='"github"'
+          [[ "$HAS_STORE" == "true" ]] && VARIANTS+=',"store"'
+          echo "matrix={\"variant\":[$VARIANTS],\"platform\":[\"x64\",\"ARM64\"],\"include\":[{\"platform\":\"x64\",\"rid\":\"win-x64\"},{\"platform\":\"ARM64\",\"rid\":\"win-arm64\"}]}" >> "$GITHUB_OUTPUT"
+
+  package:
+    name: Paket ${{ matrix.variant }} ${{ matrix.platform }}
+    needs: setup
+    runs-on: windows-2025
+    strategy:
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+    env:
+      VERSION: ${{ needs.setup.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - uses: microsoft/setup-msbuild@v3
+
+      - name: Version und Identität ins Manifest
+        shell: pwsh
+        env:
+          MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER }}
+          STORE_IDENTITY_NAME: ${{ vars.STORE_IDENTITY_NAME }}
+          STORE_PUBLISHER: ${{ vars.STORE_PUBLISHER }}
+          STORE_PUBLISHER_DISPLAY_NAME: ${{ vars.STORE_PUBLISHER_DISPLAY_NAME }}
+        run: scripts/prepare-package.ps1 -Version $env:VERSION -Variant ${{ matrix.variant }}
+
+      - name: Paket bauen
+        shell: pwsh
+        run: >
+          msbuild src/Zeiterfassung.App/Zeiterfassung.App.csproj /restore /v:minimal
+          /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:RuntimeIdentifier=${{ matrix.rid }}
+          /p:Version=$env:VERSION /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=SideloadOnly
+          /p:AppxBundle=Never /p:AppxPackageSigningEnabled=false /p:AppxPackageDir=$PWD\build\msix\
+
+      - name: Paket ablegen
+        shell: pwsh
+        run: |
+          $package = Get-ChildItem build/msix -Recurse -Filter *.msix | Select-Object -First 1
+          if (-not $package) { throw 'Kein MSIX-Paket gebaut.' }
+          New-Item -ItemType Directory -Force build/out | Out-Null
+          Copy-Item $package.FullName "build/out/Zeiterfassung_$($env:VERSION)_${{ matrix.platform }}.msix"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: msix-${{ matrix.variant }}-${{ matrix.platform }}
+          path: build/out/*.msix
+          retention-days: 7
+
+  bundle:
+    name: Bündel, Signatur, App-Installer
+    needs: [setup, package]
+    runs-on: windows-2025
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      VERSION: ${{ needs.setup.outputs.version }}
+      CAN_SIGN: ${{ vars.SIGNING_ACCOUNT != '' }}
+      HAS_STORE: ${{ vars.STORE_IDENTITY_NAME != '' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: msix-github-*
+          path: build/github
+          merge-multiple: true
+
+      - uses: actions/download-artifact@v8
+        if: env.HAS_STORE == 'true'
+        with:
+          pattern: msix-store-*
+          path: build/store
+          merge-multiple: true
+
+      - name: Bündel für x64 und ARM64
+        shell: pwsh
+        run: |
+          $makeappx = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin\10.*\x64\makeappx.exe' |
+            Sort-Object FullName -Descending | Select-Object -First 1
+          New-Item -ItemType Directory -Force build/release, build/store-bundle | Out-Null
+          & $makeappx.FullName bundle /d build/github /p "build/release/Zeiterfassung_$($env:VERSION).msixbundle" /bv "$($env:VERSION).0" /o
+          if ($LASTEXITCODE) { throw 'Bündel gescheitert' }
+          if ($env:HAS_STORE -eq 'true') {
+            & $makeappx.FullName bundle /d build/store /p "build/store-bundle/Zeiterfassung_$($env:VERSION)_Store.msixbundle" /bv "$($env:VERSION).0" /o
+            if ($LASTEXITCODE) { throw 'Store-Bündel gescheitert' }
+          }
+
+      - name: Für ein Release wird signiert
+        if: env.IS_RELEASE == 'true' && env.CAN_SIGN != 'true'
+        shell: pwsh
+        run: |
+          Write-Error 'Ohne Artifact Signing lässt sich der Release nicht installieren; Variablen siehe RELEASE.md.'
+          exit 1
+
+      - uses: azure/login@v3
+        if: env.CAN_SIGN == 'true'
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Signieren
+        if: env.CAN_SIGN == 'true'
+        uses: Azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ vars.SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.SIGNING_PROFILE }}
+          files: ${{ github.workspace }}\build\release\Zeiterfassung_${{ env.VERSION }}.msixbundle
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: App-Installer-Datei
+        shell: pwsh
+        env:
+          MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER }}
+        run: |
+          scripts/prepare-package.ps1 -Version $env:VERSION -Variant github
+          scripts/make-appinstaller.ps1 -Version $env:VERSION -Bundle "Zeiterfassung_$($env:VERSION).msixbundle" -Output build/release/Zeiterfassung.appinstaller
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release
+          path: build/release
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v7
+        if: env.HAS_STORE == 'true'
+        with:
+          name: store
+          path: build/store-bundle
+          retention-days: 30
+
+  publish:
+    name: Release anlegen
+    needs: [setup, bundle]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.setup.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: release
+          path: build/release
+
+      - name: Release anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          awk -v version="$VERSION" '
+            index($0, "## " version " ") == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          printf '\n%s\n' "Zum Installieren „Zeiterfassung.appinstaller“ laden und öffnen. Installierte Versionen aktualisieren sich über „Nach Updates suchen …“. / To install, download and open “Zeiterfassung.appinstaller”. Installed versions update via “Check for updates…”." >> "$RUNNER_TEMP/notes.md"
+          gh release create "$GITHUB_REF_NAME" --title "Zeiterfassung für Odoo $VERSION" --notes-file "$RUNNER_TEMP/notes.md" \
+            "build/release/Zeiterfassung_$VERSION.msixbundle" build/release/Zeiterfassung.appinstaller

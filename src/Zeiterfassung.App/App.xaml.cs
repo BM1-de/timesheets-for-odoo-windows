@@ -36,6 +36,9 @@ public sealed partial class App : Application
         AppInfo.IsStore = PackageInfo.IsStore;
         InitializeComponent();
         UnhandledException += (_, e) => ErrorLog.Write(e.Exception, e.Message);
+        // Fehlt eine Ressource im XAML, meldet WinUI beim Laden nur „XAML parsing failed“; das Ereignis nennt den Namen.
+        DebugSettings.IsXamlResourceReferenceTracingEnabled = ScreenshotMode.IsRequested(arguments);
+        DebugSettings.XamlResourceReferenceFailed += (_, e) => ErrorLog.Write(e.Message, "XAML-Ressource");
     }
 
     public static new App Current => (App)Application.Current;
