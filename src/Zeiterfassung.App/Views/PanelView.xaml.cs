@@ -24,7 +24,7 @@ namespace Zeiterfassung.App.Views;
 /// </summary>
 public sealed partial class PanelView : UserControl, INotifyPropertyChanged
 {
-    private readonly DispatcherQueueTimer secondTimer;
+    private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer secondTimer;
     private readonly AttendanceEditorState editorState;
     private readonly UISettings uiSettings = new();
     private Deletion? shownDeletion;

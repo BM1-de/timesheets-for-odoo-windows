@@ -4,6 +4,7 @@
 
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
+using Windows.Graphics;
 using static Zeiterfassung.App.Platform.NativeMethods;
 
 namespace Zeiterfassung.App.Platform;
@@ -81,7 +82,7 @@ public sealed class TrayIcon : IDisposable
     }
 
     /// <summary>Lage des Symbols auf dem Bildschirm in Pixeln; <c>null</c>, wenn Windows sie nicht verrät.</summary>
-    public RECT? Bounds()
+    public RectInt32? Bounds()
     {
         var identifier = new NOTIFYICONIDENTIFIER
         {
@@ -89,7 +90,8 @@ public sealed class TrayIcon : IDisposable
             hWnd = window,
             uID = IconId,
         };
-        return Shell_NotifyIconGetRect(ref identifier, out var rect) == 0 ? rect : null;
+        if (Shell_NotifyIconGetRect(ref identifier, out var rect) != 0) return null;
+        return new RectInt32(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top);
     }
 
     private void Apply()

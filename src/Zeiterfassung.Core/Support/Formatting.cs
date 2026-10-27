@@ -24,7 +24,8 @@ public static class Formatting
         {
             try
             {
-                return CultureInfo.GetCultureInfo($"{language}-{region}", predefinedOnly: true);
+                // Auch Paare, die es so nicht gibt (Französisch in den USA): ICU setzt sie aus Sprache und Region zusammen.
+                return CultureInfo.GetCultureInfo($"{language}-{region}");
             }
             catch (CultureNotFoundException)
             {

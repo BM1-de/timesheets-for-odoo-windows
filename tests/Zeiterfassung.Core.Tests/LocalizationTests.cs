@@ -50,7 +50,8 @@ public sealed partial class LocalizationTests
 
     [Theory(DisplayName = "die gebaute App enthält die Übersetzungen")]
     [InlineData("en", "Settings…", "Timesheets for Odoo", "1 hour", "2 hours")]
-    [InlineData("fr", "Réglages…", "Feuilles de temps pour Odoo", "1 heure", "2 heures")]
+    // Unter Windows heißen die Einstellungen französisch „Paramètres“ wie in Windows selbst, auf dem Mac „Réglages“.
+    [InlineData("fr", "Paramètres…", "Feuilles de temps pour Odoo", "1 heure", "2 heures")]
     public void BuiltTranslations(string language, string settings, string name, string oneHour, string twoHours) =>
         InLanguage(language, () =>
         {
@@ -108,8 +109,8 @@ public sealed partial class LocalizationTests
     }
 
     /// <summary>
-    /// Die Übersetzungskataloge, wie Loc sie liest: der der Mac-App und, falls vorhanden, der mit Texten nur für
-    /// Windows, der gleiche Schlüssel ersetzt. In die Assembly eingebettet, aber Byte für Byte die Datei im Quellcode.
+    /// Die Übersetzungskataloge, wie Loc sie liest: der der Mac-App und der mit Texten nur für Windows, der bei gleichem
+    /// Schlüssel die Sprachen ersetzt, die er nennt. In die Assembly eingebettet, aber Byte für Byte die Datei im Quellcode.
     /// </summary>
     private static Dictionary<string, JsonNode?> Catalog()
     {
@@ -119,7 +120,16 @@ public sealed partial class LocalizationTests
             using var stream = typeof(Loc).Assembly.GetManifestResourceStream(name);
             if (stream is null) continue;
             if (JsonNode.Parse(stream).Field("strings") is not JsonObject catalog) continue;
-            foreach (var (key, value) in catalog) strings[key] = value?.DeepClone();
+            foreach (var (key, value) in catalog)
+            {
+                if (strings.GetValueOrDefault(key).Field("localizations") is JsonObject merged
+                    && value.Field("localizations") is JsonObject replaced)
+                {
+                    foreach (var (language, localization) in replaced) merged[language] = localization?.DeepClone();
+                    continue;
+                }
+                strings[key] = value?.DeepClone();
+            }
         }
         return strings;
     }

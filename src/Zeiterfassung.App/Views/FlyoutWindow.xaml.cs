@@ -96,7 +96,7 @@ public sealed partial class FlyoutWindow : Window
     /// <summary>Mitte des Symbols; ohne Angabe die Ecke unten rechts des Hauptbildschirms.</summary>
     private PointInt32 AnchorPoint()
     {
-        if (anchor?.Bounds() is { } bounds) return new PointInt32((bounds.Left + bounds.Right) / 2, (bounds.Top + bounds.Bottom) / 2);
+        if (anchor?.Bounds() is { } bounds) return new PointInt32(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
         var primary = DisplayArea.Primary.WorkArea;
         return new PointInt32(primary.X + primary.Width - 1, primary.Y + primary.Height - 1);
     }
