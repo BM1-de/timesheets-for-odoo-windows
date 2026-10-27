@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
+using Zeiterfassung.App.Platform;
 using Zeiterfassung.App.Views;
 using Zeiterfassung.Demo;
 using Zeiterfassung.Model;

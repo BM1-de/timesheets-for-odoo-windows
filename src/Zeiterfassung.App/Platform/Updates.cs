@@ -110,7 +110,8 @@ public sealed class Updates
         {
             var text = await http.GetStringAsync(AppInstallerUrl);
             var document = XDocument.Parse(text);
-            var main = document.Root?.Elements().FirstOrDefault(element => element.Name.LocalName == "MainPackage");
+            // Die Releases sind Bündel für x64 und ARM64 (MainBundle); ein einzelnes Paket (MainPackage) ginge auch.
+            var main = document.Root?.Elements().FirstOrDefault(element => element.Name.LocalName is "MainBundle" or "MainPackage");
             var offered = Version.TryParse(main?.Attribute("Version")?.Value, out var version) ? version : null;
             var installed = Windows.ApplicationModel.Package.Current.Id.Version;
             var current = new Version(installed.Major, installed.Minor, installed.Build, installed.Revision);
