@@ -63,11 +63,15 @@ jobs:
         shell: pwsh
         run: |
           $failed = $false
-          foreach ($language in 'de', 'en') {
-            $folder = "$PWD\build\bilder\$language"
+          # Ein großer Bildschirm, damit lange Ansichten ganz aufs Bild passen.
+          Set-DisplayResolution -Width 1920 -Height 1200 -Force -ErrorAction Continue
+          foreach ($run in 'de hell', 'de dunkel', 'en hell') {
+            $language, $look = $run -split ' '
+            $folder = "$PWD\build\bilder\$language-$look"
             New-Item -ItemType Directory -Force $folder | Out-Null
+            $theme = if ($look -eq 'dunkel') { 'dark' } else { 'light' }
             # Über den Ausführungsalias startet Windows die installierte App mit ihrer Paketidentität.
-            Start-Process -FilePath "$env:LOCALAPPDATA\Microsoft\WindowsApps\Zeiterfassung.exe" -ArgumentList '--screenshots', $folder, '--language', $language
+            Start-Process -FilePath "$env:LOCALAPPDATA\Microsoft\WindowsApps\Zeiterfassung.exe" -ArgumentList '--screenshots', $folder, '--language', $language, '--theme', $theme
             # Warten, bis das Protokoll fertig ist oder die App seit einigen Sekunden nicht mehr läuft.
             $deadline = (Get-Date).AddSeconds(240)
             $gone = 0

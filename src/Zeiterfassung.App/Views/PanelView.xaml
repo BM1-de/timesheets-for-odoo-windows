@@ -292,7 +292,7 @@
             </StackPanel>
 
             <ScrollViewer x:Name="Scroller" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
-                <StackPanel x:Name="ContentStack" Spacing="14" Padding="12,2,12,14" SizeChanged="Part_SizeChanged">
+                <StackPanel x:Name="ContentStack" Spacing="14" Padding="12,2,12,14" VerticalAlignment="Top" SizeChanged="Part_SizeChanged">
 
                     <!-- Keine Funktion eingeschaltet -->
                     <Border Style="{StaticResource GroupStyle}" Padding="16,22,16,22" Visibility="{x:Bind z:Show.If(Model.NoFeatureActive), Mode=OneWay}">

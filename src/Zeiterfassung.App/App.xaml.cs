@@ -34,6 +34,7 @@ public sealed partial class App : Application
         ConfigureLanguage();
         AppInfo.Version = PackageInfo.Version;
         AppInfo.IsStore = PackageInfo.IsStore;
+        if (ScreenshotMode.IsRequested(arguments) && ScreenshotMode.Theme(arguments) is { } theme) RequestedTheme = theme;
         InitializeComponent();
         // Die App lebt im Infobereich: Schließt man das letzte Fenster, läuft sie weiter, bis „Beenden“ sie beendet.
         DispatcherShutdownMode = DispatcherShutdownMode.OnExplicitShutdown;

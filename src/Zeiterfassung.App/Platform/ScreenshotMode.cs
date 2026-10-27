@@ -19,12 +19,20 @@ namespace Zeiterfassung.App;
 
 /// <summary>
 /// Bildschirmfotos der wichtigsten Zustände mit erfundenen Daten, für die Prüfung auf GitHub und für den Store:
-/// <c>Zeiterfassung.exe --screenshots &lt;Ordner&gt; [--language de|en|fr]</c>. Uhr und Daten stehen fest, damit die
+/// <c>Zeiterfassung.exe --screenshots &lt;Ordner&gt; [--language de|en|fr] [--theme dark]</c>. Uhr und Daten stehen fest, damit die
 /// Bilder bei jedem Lauf gleich aussehen.
 /// </summary>
 public static class ScreenshotMode
 {
     public static bool IsRequested(string[] arguments) => arguments.Contains("--screenshots");
+
+    /// <summary>Erscheinungsbild der Bilder; die App setzt es beim Start, später ginge es nicht mehr.</summary>
+    public static ApplicationTheme? Theme(string[] arguments) => Argument(arguments, "--theme") switch
+    {
+        "dark" => ApplicationTheme.Dark,
+        "light" => ApplicationTheme.Light,
+        _ => null,
+    };
 
     private static string Argument(string[] arguments, string name) =>
         Array.IndexOf(arguments, name) is var index and >= 0 && index + 1 < arguments.Length ? arguments[index + 1] : "";
@@ -116,15 +124,10 @@ public static class ScreenshotMode
         model.ShowToday();
         await model.RefreshAsync(force: true);
 
-        // Dunkel
-        if (window.Content is FrameworkElement root) root.RequestedTheme = ElementTheme.Dark;
-        await Capture(window, folder, "07-dunkel", log);
-        if (window.Content is FrameworkElement light) light.RequestedTheme = ElementTheme.Default;
-
         // Einstellungen
         var settings = new SettingsWindow();
         settings.Activate();
-        await Capture(settings, folder, "08-einstellungen", log);
+        await Capture(settings, folder, "07-einstellungen", log);
         settings.Close();
 
         log("Fertig");
