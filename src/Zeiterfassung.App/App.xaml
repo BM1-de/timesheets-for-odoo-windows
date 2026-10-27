@@ -55,6 +55,8 @@
                         <ControlTemplate TargetType="Button">
                             <Grid x:Name="Root"
                                   Background="{TemplateBinding Background}"
+                                  BorderBrush="{TemplateBinding BorderBrush}"
+                                  BorderThickness="{TemplateBinding BorderThickness}"
                                   CornerRadius="{TemplateBinding CornerRadius}"
                                   Padding="{TemplateBinding Padding}">
                                 <VisualStateManager.VisualStateGroups>

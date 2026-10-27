@@ -33,19 +33,6 @@ jobs:
         shell: pwsh
         run: dotnet build src/Zeiterfassung.App -c Release -p:Platform=x64 -r win-x64 -p:WindowsPackageType=None -o build/lose
 
-      - name: Bildschirmfotos
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force build/bilder | Out-Null
-          $app = Start-Process -FilePath build/lose/Zeiterfassung.exe -ArgumentList '--screenshots', "$PWD\build\bilder" -PassThru
-          if (-not $app.WaitForExit(240000)) { $app.Kill(); Write-Error 'Bildschirmfotos hängen' }
-          Write-Host "Beendet mit $($app.ExitCode)"
-          Get-ChildItem build/bilder | Format-Table Name, Length
-          if (Test-Path build/bilder/protokoll.txt) { Get-Content build/bilder/protokoll.txt }
-          Get-WinEvent -LogName Application -MaxEvents 20 -ErrorAction SilentlyContinue |
-            Where-Object { $_.ProviderName -in '.NET Runtime', 'Application Error' } |
-            Format-List TimeCreated, ProviderName, Message
-
       - name: Paket (MSIX, unsigniert)
         shell: pwsh
         run: >
@@ -53,6 +40,23 @@ jobs:
           /p:Configuration=Release /p:Platform=x64 /p:RuntimeIdentifier=win-x64
           /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxBundle=Never
           /p:AppxPackageSigningEnabled=false /p:AppxPackageDir=$PWD\build\msix\
+
+      - name: Bildschirmfotos
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force build/bilder | Out-Null
+          $app = Start-Process -FilePath build/lose/Zeiterfassung.exe -ArgumentList '--screenshots', "$PWD\build\bilder" -PassThru
+          if (-not $app.WaitForExit(240000)) { $app.Kill(); Write-Warning 'Bildschirmfotos hängen' }
+          Write-Host "Beendet mit $($app.ExitCode)"
+          Get-ChildItem build/bilder | Format-Table Name, Length
+          foreach ($file in 'build/bilder/protokoll.txt', 'build/bilder/fehler.log', "$env:LOCALAPPDATA\Zeiterfassung\fehler.log") {
+            if (Test-Path $file) { Write-Host "--- $file"; Get-Content $file }
+          }
+          Get-WinEvent -LogName Application -MaxEvents 20 -ErrorAction SilentlyContinue |
+            Where-Object { $_.ProviderName -in '.NET Runtime', 'Application Error' } |
+            Format-List TimeCreated, ProviderName, Message
+          # Fertig ist der Lauf erst, wenn das Protokoll bis zum Ende kam.
+          if (-not (Select-String -Path build/bilder/protokoll.txt -Pattern '^Fertig$' -Quiet -ErrorAction SilentlyContinue)) { exit 1 }
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -62,6 +66,7 @@ jobs:
           if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: msix-x64
           path: build/msix

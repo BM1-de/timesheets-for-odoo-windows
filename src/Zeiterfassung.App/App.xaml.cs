@@ -35,7 +35,7 @@ public sealed partial class App : Application
         AppInfo.Version = PackageInfo.Version;
         AppInfo.IsStore = PackageInfo.IsStore;
         InitializeComponent();
-        UnhandledException += (_, e) => System.Diagnostics.Debug.WriteLine($"Zeiterfassung: {e.Exception}");
+        UnhandledException += (_, e) => ErrorLog.Write(e.Exception, e.Message);
     }
 
     public static new App Current => (App)Application.Current;

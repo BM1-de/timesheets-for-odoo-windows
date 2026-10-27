@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -37,12 +36,31 @@ public static class ScreenshotMode
         var folder = Argument(arguments, "--screenshots");
         if (folder.Length == 0) folder = Path.Combine(Path.GetTempPath(), "zeiterfassung-bilder");
         Directory.CreateDirectory(folder);
+        ErrorLog.Folder = folder;
+        // Das Protokoll wächst Zeile für Zeile, damit auch ein Absturz zeigt, wie weit es kam.
+        var path = Path.Combine(folder, "protokoll.txt");
+        File.WriteAllText(path, "");
+        void Log(string line) => File.AppendAllText(path, line + Environment.NewLine);
+        try
+        {
+            await CaptureAllAsync(arguments, folder, Log, setModel, setUpdates);
+        }
+        catch (Exception error)
+        {
+            Log($"Abbruch: {error}");
+            ErrorLog.Write(error, "Bildschirmfotos");
+        }
+    }
+
+    private static async Task CaptureAllAsync(string[] arguments, string folder, Action<string> log, Action<AppModel> setModel,
+                                              Action<Updates> setUpdates)
+    {
         if (Argument(arguments, "--language") is { Length: > 0 } language)
         {
             Loc.Language = language;
             Formatting.Culture = Formatting.MakeCulture(Loc.Language, System.Globalization.CultureInfo.GetCultureInfo(language));
         }
-        var log = new StringBuilder();
+        log($"Sprache {Loc.Language}, Kultur {Formatting.Culture.Name}");
         var zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
         var now = FixedNow;
         var demo = DemoData.MakeOdoo(now, zone);
@@ -52,6 +70,7 @@ public static class ScreenshotMode
         setModel(model);
         setUpdates(new Updates(preferences));
 
+        log("Fenster wird angelegt");
         var window = new FlyoutWindow { KeepsOpen = true };
         await model.StartAsync();
         window.ShowNear(null);
@@ -60,7 +79,7 @@ public static class ScreenshotMode
         await model.SignInAsync("demo", "", null, null);
         model.FinishSignIn();
         await model.RefreshAsync(force: true);
-        log.AppendLine($"Tooltip: {model.TrayContent.ToolTip.Replace('\n', '|')}");
+        log($"Tooltip: {model.TrayContent.ToolTip.Replace('\n', '|')}");
         await Capture(window, folder, "02-tag", log);
 
         // Neuer Eintrag mit Projekt und Aufgabe, dann starten
@@ -72,7 +91,7 @@ public static class ScreenshotMode
         await model.StartTimerAsync();
         now = now.AddMinutes(42).AddSeconds(17);
         await model.TickAsync();
-        log.AppendLine($"Tooltip mit Timer: {model.TrayContent.ToolTip.Replace('\n', '|')}");
+        log($"Tooltip mit Timer: {model.TrayContent.ToolTip.Replace('\n', '|')}");
         await Capture(window, folder, "04-timer", log);
 
         // Eintrag bearbeiten
@@ -99,11 +118,11 @@ public static class ScreenshotMode
         await Capture(settings, folder, "08-einstellungen", log);
         settings.Close();
 
-        await File.WriteAllTextAsync(Path.Combine(folder, "protokoll.txt"), log.ToString());
+        log("Fertig");
     }
 
     /// <summary>Wartet, bis das Fenster gezeichnet ist, und speichert seinen Inhalt als PNG.</summary>
-    private static async Task Capture(Window window, string folder, string name, StringBuilder log)
+    private static async Task Capture(Window window, string folder, string name, Action<string> log)
     {
         if (window.Content is not FrameworkElement root) return;
         var previous = (root as Microsoft.UI.Xaml.Controls.Panel)?.Background;
@@ -130,11 +149,11 @@ public static class ScreenshotMode
             var bytes = new byte[stream.Size];
             await stream.ReadAsync(bytes.AsBuffer(), (uint)stream.Size, InputStreamOptions.None);
             await File.WriteAllBytesAsync(path, bytes);
-            log.AppendLine($"{name}: {bitmap.PixelWidth} × {bitmap.PixelHeight}");
+            log($"{name}: {bitmap.PixelWidth} × {bitmap.PixelHeight}");
         }
         catch (Exception error)
         {
-            log.AppendLine($"{name}: Fehler {error.Message}");
+            log($"{name}: Fehler {error}");
         }
         finally
         {

@@ -194,7 +194,7 @@
 
         <DataTemplate x:Key="PickerOptionTemplate" x:DataType="views:PickerItem">
             <Button Style="{StaticResource SubtleButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                    Padding="4,0,8,0" Height="30" Background="{x:Bind HighlightBrush, Mode=OneWay}" Click="PickProject_Click"
+                    Padding="4,0,8,0" Height="30" Background="{x:Bind HighlightBrush}" Click="PickProject_Click"
                     AutomationProperties.Name="{x:Bind AccessibilityText}">
                 <Grid ColumnSpacing="6">
                     <Grid.ColumnDefinitions>
