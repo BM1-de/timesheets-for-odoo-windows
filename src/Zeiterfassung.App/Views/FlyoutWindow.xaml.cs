@@ -110,18 +110,23 @@ public sealed partial class FlyoutWindow : Window
         var width = (int)Math.Round(PanelWidth * scale);
         var height = (int)Math.Round(Math.Max(120, Panel.NaturalHeight) * scale);
         if (!IsForScreenshots) height = Math.Min(height, workArea.Height - 2 * margin);
-        AppWindow.ResizeClient(new SizeInt32(width, height));
+        // Ohne Titelleiste reicht der Inhalt auch über den Streifen, den Windows für sie freihält; die Fläche des
+        // Inhalts ist deshalb um diesen Streifen höher als ClientSize.
+        var caption = Content?.XamlRoot is { } root
+            ? Math.Max(0, (int)Math.Round(root.Size.Height * scale) - AppWindow.ClientSize.Height)
+            : 0;
+        AppWindow.ResizeClient(new SizeInt32(width, height - caption));
 
-        // Den Abstand zum Rand hält die Fläche selbst; der Rahmen darum ist zum Teil unsichtbar.
-        var outer = AppWindow.Size;
-        var frameX = (outer.Width - width) / 2;
-        var frameY = (outer.Height - height) / 2;
+        // Den Abstand zum Rand hält das sichtbare Fenster; der Rahmen darum ist zum Teil unsichtbar.
+        var frame = Native.InvisibleFrame(this);
+        var visibleWidth = AppWindow.Size.Width - frame.Left - frame.Right;
+        var visibleHeight = AppWindow.Size.Height - frame.Top - frame.Bottom;
         var point = AnchorPoint();
         var right = point.X > workArea.X + workArea.Width / 2;
         var bottom = point.Y > workArea.Y + workArea.Height / 2;
-        var x = right ? workArea.X + workArea.Width - width - margin : workArea.X + margin;
-        var y = bottom ? workArea.Y + workArea.Height - height - margin : workArea.Y + margin;
-        AppWindow.Move(new PointInt32(x - frameX, y - frameY));
+        var x = right ? workArea.X + workArea.Width - visibleWidth - margin : workArea.X + margin;
+        var y = bottom ? workArea.Y + workArea.Height - visibleHeight - margin : workArea.Y + margin;
+        AppWindow.Move(new PointInt32(x - frame.Left, y - frame.Top));
     }
 
     private void OnActivated(object sender, WindowActivatedEventArgs args)

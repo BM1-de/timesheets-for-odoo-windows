@@ -138,15 +138,17 @@ Update-Suche nichts und sendet keine Daten.
 
 ## Selbst bauen
 
-Unter Windows mit dem .NET 10 SDK:
+Unter Windows mit dem .NET 10 SDK und MSBuild aus Visual Studio 2026 oder den Build Tools. Das MSIX-Paket für
+x64:
 
-```bash
-dotnet build src/Zeiterfassung.App -c Release -p:Platform=x64 -r win-x64 -p:WindowsPackageType=None
+```powershell
+msbuild src/Zeiterfassung.App/Zeiterfassung.App.csproj /restore /p:Configuration=Release /p:Platform=x64 /p:RuntimeIdentifier=win-x64 /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxBundle=Never
 ```
 
-Das baut die App ohne Paket; `Zeiterfassung.exe` im Ausgabeordner startet sie direkt. Das
-MSIX-Paket baut MSBuild aus Visual Studio oder den Build Tools, wie in
-[`.github/workflows/build.yml`](.github/workflows/build.yml). Veröffentlicht wird über GitHub
+Windows installiert das Paket nur signiert. Zum Ausprobieren genügt ein selbst ausgestelltes Zertifikat auf den
+Herausgeber aus `Package.appxmanifest`, dem der Rechner vertraut; so macht es die Prüfung auf GitHub in
+[`.github/workflows/build.yml`](.github/workflows/build.yml). In Visual Studio installiert *Bereitstellen* die App
+direkt. Ohne Paket startet die App nicht: WinUI findet dann seine Ressourcen nicht. Veröffentlicht wird über GitHub
 Actions, siehe [RELEASE.md](RELEASE.md).
 
 ## Entwicklung
@@ -162,9 +164,11 @@ Actions, siehe [RELEASE.md](RELEASE.md).
   Windows andere Begriffe nutzt („Paramètres“ statt „Réglages“). Texte im Code stehen auf Deutsch
   in `Loc.T("…")`, in XAML als `{z:Str Key='…'}`. Der Test „Sprachen“ prüft, ob jeder Text in
   jeder Sprache vorliegt.
-- Bildschirmfotos: `Zeiterfassung.exe --screenshots <Ordner> [--language de|en|fr]` zeichnet die
-  wichtigsten Zustände mit erfundenen Daten und fester Uhrzeit in PNG-Dateien und beendet sich.
-  GitHub Actions macht das bei jedem Bau und legt die Bilder als Artefakt ab.
+- Bildschirmfotos: `Zeiterfassung.exe --screenshots <Ordner> [--language de|en|fr] [--theme dark]` zeichnet
+  die wichtigsten Zustände mit erfundenen Daten und fester Uhrzeit in PNG-Dateien und beendet sich; dazu ein
+  Protokoll mit den Tooltips. Die installierte App ist über diesen Namen erreichbar (Ausführungsalias). GitHub
+  Actions installiert bei jedem Bau das Paket, zeichnet die Bilder auf Deutsch hell und dunkel sowie auf Englisch
+  und legt sie als Artefakt `bilder` ab.
 - Symbole: `python3 scripts/make-assets.py` erzeugt Kacheln, App-Symbol und die Symbole für den
   Infobereich aus den SVG-Dateien in `design/symbole` (braucht `rsvg-convert`).
 
