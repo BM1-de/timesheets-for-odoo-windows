@@ -20,6 +20,7 @@ public static class Program
     private static int Main(string[] args)
     {
         WinRT.ComWrappersSupport.InitializeComWrappers();
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => ErrorLog.Write(e.ExceptionObject.ToString() ?? "", "Absturz");
         // Bildschirmfotos für Prüfungen laufen neben einer installierten App her.
         if (!ScreenshotMode.IsRequested(args))
         {

@@ -79,8 +79,10 @@ public static class ScreenshotMode
         Probe("SettingsWindow", () => new SettingsWindow().Close(), log);
         log("Fenster wird angelegt");
         var window = new FlyoutWindow { KeepsOpen = true };
+        log("Fenster angelegt");
         await model.StartAsync();
         window.ShowNear(null);
+        log("Fenster gezeigt");
         await Capture(window, folder, "01-anmeldung", log);
 
         await model.SignInAsync("demo", "", null, null);
@@ -153,6 +155,7 @@ public static class ScreenshotMode
         }
         for (var round = 0; round < 8; round++) await Task.Delay(120);
         root.UpdateLayout();
+        log($"{name}: wird gezeichnet");
         try
         {
             var bitmap = new RenderTargetBitmap();
