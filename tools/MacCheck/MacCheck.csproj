@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Prüft den C#-Teil der Windows-App auf dem Mac oder unter Linux, ohne XAML-Compiler: Felder und
+       InitializeComponent aus dem XAML ersetzen Platzhalter von scripts/make-xaml-stubs.py. Aufruf: scripts/check-app.sh -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RootNamespace>Zeiterfassung.App</RootNamespace>
+    <AssemblyName>Zeiterfassung</AssemblyName>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <AppxGeneratePriEnabled>false</AppxGeneratePriEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\Zeiterfassung.App\**\*.cs" Exclude="..\..\src\Zeiterfassung.App\obj\**;..\..\src\Zeiterfassung.App\bin\**" />
+    <Compile Include="obj\stubs\*.cs" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.3.9" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Foundation" Version="2.3.12" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.InteractiveExperiences" Version="2.1.9" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
+    <ProjectReference Include="..\..\src\Zeiterfassung.Core\Zeiterfassung.Core.csproj" />
+  </ItemGroup>
+
+</Project>

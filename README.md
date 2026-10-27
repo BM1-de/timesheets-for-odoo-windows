@@ -11,6 +11,11 @@ Abläufe, dieselben Texte und dieselben Tests, umgesetzt mit WinUI 3.
 > **Alpha:** Die App ist neu und wird bei der Baumgärtner Marketing GmbH erprobt. Sie wird ohne
 > Gewährleistung bereitgestellt (AGPL-3.0, Abschnitte 15 und 16).
 
+<p>
+  <img src="docs/screenshots/fenster-hell.png" width="372" alt="Fenster über dem Infobereich: Anwesenheit, Einträge des Tages und neuer Eintrag">
+  <img src="docs/screenshots/fenster-dunkel.png" width="372" alt="Dasselbe Fenster im dunklen Erscheinungsbild">
+</p>
+
 ## Was die App kann
 
 - **Zeiteinträge:** Projekt (mit Suche, zuletzt verwendete oben), Aufgabe, Beschreibung und
@@ -53,6 +58,14 @@ Abläufe, dieselben Texte und dieselben Tests, umgesetzt mit WinUI 3.
 - **Sprachen:** Deutsch, Englisch und Französisch, nach der Sprache von Windows. Datum und Uhrzeit
   folgen der eingestellten Region, auch mit 12-Stunden-Uhr.
 
+<p>
+  <img src="docs/screenshots/timer-laeuft.png" width="372" alt="Oben im Fenster läuft eine Projektzeit seit 14:52 mit Beschreibung, Projekt und Aufgabe, daneben Verwerfen und Stoppen">
+  <img src="docs/screenshots/bearbeiten.png" width="372" alt="Ein Eintrag ist zum Bearbeiten geöffnet: Projekt, Aufgabe, Beschreibung, Dauer und Datum, darunter Löschen, Sichern und Abbrechen">
+</p>
+<p>
+  <img src="docs/screenshots/anwesenheit.png" width="372" alt="Gestern: Anwesenheit von 8:10 bis 17:10 mit den Zeiten des Tages, Pause und der noch nicht gebuchten Zeit">
+</p>
+
 ## Voraussetzungen
 
 - Windows 10 Version 2004 oder neuer oder Windows 11, x64 oder ARM64
@@ -78,6 +91,11 @@ Läuft der API-Schlüssel ab, meldet die App das und bittet um einen neuen.
 **Ohne Odoo ausprobieren:** als Server `demo` und als API-Schlüssel `demo` eintragen. Die App
 zeigt dann erfundene Projekte und Einträge in ihrer Sprache. Was man bucht oder stempelt, bleibt
 bis zum Beenden der App erhalten und verlässt den Rechner nicht.
+
+<p>
+  <img src="docs/screenshots/anmeldung.png" width="372" alt="Anmeldung: Server und API-Schlüssel">
+  <img src="docs/screenshots/einstellungen.png" width="460" alt="Einstellungen: Funktionen mit Status, Infobereich und Konto">
+</p>
 
 ## Rechte in Odoo
 
@@ -158,6 +176,8 @@ Actions, siehe [RELEASE.md](RELEASE.md).
   Windows App SDK, Symbol im Infobereich, Anmeldeinformationen, Autostart und Updates.
 - Tests: `dotnet test --project tests/Zeiterfassung.Core.Tests`. Es sind die Tests der Mac-App,
   übertragen auf C#; sie laufen gegen ein simuliertes Odoo im Arbeitsspeicher.
+- Ohne Windows: `scripts/check-app.sh` kompiliert den C#-Teil der App auch auf macOS und Linux;
+  Platzhalter ersetzen den Code, den der XAML-Compiler erzeugt. XAML selbst prüft erst der Bau unter Windows.
 - Übersetzungen: `Localization/Localizable.xcstrings` ist der Katalog der Mac-App, unverändert
   übernommen; Ausgangssprache Deutsch, dazu Englisch und Französisch. `Windows.xcstrings` enthält
   die Texte, die es nur unter Windows gibt, und ersetzt einzelne Sprachen eines Mac-Textes, wo
