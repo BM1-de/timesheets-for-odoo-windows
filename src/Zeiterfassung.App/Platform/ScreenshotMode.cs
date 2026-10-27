@@ -73,6 +73,7 @@ public static class ScreenshotMode
 
         // Scheitert das XAML einer Ansicht, meldet WinUI beim Fenster nur „XAML parsing failed“; einzeln angelegt zeigt
         // sich, welche Ansicht es ist.
+        XamlSelfTest.Run(log);
         Probe("LoginView", () => new LoginView(), log);
         Probe("PanelView", () => new PanelView(), log);
         Probe("SettingsWindow", () => new SettingsWindow().Close(), log);

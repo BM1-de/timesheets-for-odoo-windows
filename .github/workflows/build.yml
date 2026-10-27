@@ -12,8 +12,8 @@ jobs:
     name: Tests der Abläufe
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
       - name: Tests
@@ -23,11 +23,11 @@ jobs:
     name: Windows-App
     runs-on: windows-2025
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
-      - uses: microsoft/setup-msbuild@v2
+      - uses: microsoft/setup-msbuild@v3
 
       - name: Bauen ohne Paket
         shell: pwsh
@@ -58,14 +58,14 @@ jobs:
           # Fertig ist der Lauf erst, wenn das Protokoll bis zum Ende kam.
           if (-not (Select-String -Path build/bilder/protokoll.txt -Pattern '^Fertig$' -Quiet -ErrorAction SilentlyContinue)) { exit 1 }
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: bilder
           path: build/bilder
           if-no-files-found: ignore
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: msix-x64
