@@ -1,0 +1,872 @@
+{
+  "sourceLanguage": "de",
+  "strings": {
+    "%@ aus dem Microsoft Store": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ from the Microsoft Store"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ depuis le Microsoft Store"
+          }
+        }
+      }
+    },
+    "%@ – Einstellungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – Settings"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – Paramètres"
+          }
+        }
+      }
+    },
+    "Abmelden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se déconnecter"
+          }
+        }
+      }
+    },
+    "Abmelden …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se déconnecter…"
+          }
+        }
+      }
+    },
+    "Ausstempeln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check out"
+          }
+        }
+      }
+    },
+    "Autostart-Einstellungen öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open startup settings"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir les paramètres de démarrage"
+          }
+        }
+      }
+    },
+    "Beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitter"
+          }
+        }
+      }
+    },
+    "Beim Anmelden bei Windows im Infobereich öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in the notification area when you sign in to Windows"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir dans la zone de notification à la connexion à Windows"
+          }
+        }
+      }
+    },
+    "Beschreibung kopieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy description"
+          }
+        }
+      }
+    },
+    "Deine Organisation legt fest, ob die App mit Windows startet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your organization decides whether the app starts with Windows."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre organisation décide si l’app démarre avec Windows."
+          }
+        }
+      }
+    },
+    "Der API-Schlüssel konnte nicht in der Windows-Anmeldeinformationsverwaltung gespeichert werden (Fehler %lld).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The API key couldn’t be saved in Windows Credential Manager (error %lld)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé API n’a pas pu être enregistrée dans le Gestionnaire d’identification Windows (erreur %lld)."
+          }
+        }
+      }
+    },
+    "Der API-Schlüssel wird aus der Windows-Anmeldeinformationsverwaltung gelöscht. Deine Einträge in Odoo bleiben erhalten, die laufende Projektzeit wird nicht gebucht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The API key will be deleted from Windows Credential Manager. Your entries in Odoo are kept; the running timer won’t be booked."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé API sera supprimée du Gestionnaire d’identification Windows. Vos saisies dans Odoo sont conservées, le minuteur en cours ne sera pas enregistré."
+          }
+        }
+      }
+    },
+    "Der API-Schlüssel wird aus der Windows-Anmeldeinformationsverwaltung gelöscht. Deine Einträge in Odoo bleiben erhalten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The API key will be deleted from Windows Credential Manager. Your entries in Odoo are kept."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé API sera supprimée du Gestionnaire d’identification Windows. Vos saisies dans Odoo sont conservées."
+          }
+        }
+      }
+    },
+    "Die App startet dafür neu, das dauert nur wenige Sekunden. Deine Anwesenheit läuft in Odoo weiter.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app restarts for this, which only takes a few seconds. Your attendance keeps running in Odoo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’app redémarre pour cela, ce qui ne prend que quelques secondes. Votre présence continue dans Odoo."
+          }
+        }
+      }
+    },
+    "Die Suche nach Updates ist gescheitert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking for updates failed."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La recherche de mises à jour a échoué."
+          }
+        }
+      }
+    },
+    "Du hast die neueste Version.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have the latest version."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez la dernière version."
+          }
+        }
+      }
+    },
+    "Eingabe übernehmen · Esc schließen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter choose · Esc close"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrée valider · Échap fermer"
+          }
+        }
+      }
+    },
+    "Einmal am Tag; eine neue Version zeigt das Fenster im Infobereich an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Once a day; a new version shows up in the notification area window"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une fois par jour ; une nouvelle version s’affiche dans la fenêtre de la zone de notification"
+          }
+        }
+      }
+    },
+    "Einmal anmelden, danach erfasst du Zeiten direkt aus dem Infobereich der Taskleiste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in once, then record your time right from the notification area of the taskbar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectez-vous une fois, puis saisissez vos temps directement depuis la zone de notification de la barre des tâches."
+          }
+        }
+      }
+    },
+    "Einstellungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paramètres"
+          }
+        }
+      }
+    },
+    "Einstellungen (Strg+,)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings (Ctrl+,)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paramètres (Ctrl+,)"
+          }
+        }
+      }
+    },
+    "Einstellungen öffnen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open settings…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir les paramètres…"
+          }
+        }
+      }
+    },
+    "Einstellungen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paramètres…"
+          }
+        }
+      }
+    },
+    "Einstempeln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check in"
+          }
+        }
+      }
+    },
+    "Erneut prüfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check again"
+          }
+        }
+      }
+    },
+    "Erneut starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start again"
+          }
+        }
+      }
+    },
+    "Erneut versuchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        }
+      }
+    },
+    "Gerade eben: Du hast die neueste Version.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just now: you have the latest version."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l’instant : vous avez la dernière version."
+          }
+        }
+      }
+    },
+    "Grüner Punkt am Symbol, Projekt und Zeit im Tooltip. Läuft keine Projektzeit, bleibt das Symbol ohne Punkt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Green dot on the icon, project and time in the tooltip. Without a running timer, the icon has no dot."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Point vert sur l’icône, projet et durée dans l’info-bulle. Sans minuteur en cours, l’icône reste sans point."
+          }
+        }
+      }
+    },
+    "In Odoo: Profilbild oben rechts › Meine Präferenzen › Sicherheit › API-Schlüssel hinzufügen. Der Schlüssel wird in der Windows-Anmeldeinformationsverwaltung gespeichert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Odoo: profile picture at the top right › My Preferences › Security › Add API Key. The key is stored in Windows Credential Manager."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans Odoo : photo de profil en haut à droite › Mes préférences › Sécurité › Ajouter une clé API. La clé est enregistrée dans le Gestionnaire d’identification Windows."
+          }
+        }
+      }
+    },
+    "In den Windows-Einstellungen unter Apps › Autostart ausgeschaltet. Nur dort lässt es sich wieder einschalten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turned off in Windows Settings under Apps › Startup. It can only be turned back on there."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactivé dans les Paramètres Windows sous Applications › Démarrage. Il ne peut être réactivé que là."
+          }
+        }
+      }
+    },
+    "Infobereich der Taskleiste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notification area"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zone de notification"
+          }
+        }
+      }
+    },
+    "Installieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installer"
+          }
+        }
+      }
+    },
+    "Jetzt suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check now"
+          }
+        }
+      }
+    },
+    "Laufende Projektzeit am Symbol zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show running timer on the icon"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher le minuteur en cours sur l’icône"
+          }
+        }
+      }
+    },
+    "Laufende Zeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running timer"
+          }
+        }
+      }
+    },
+    "Mit Windows starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start with Windows"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démarrer avec Windows"
+          }
+        }
+      }
+    },
+    "Nach Updates suchen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for updates…"
+          }
+        }
+      }
+    },
+    "Neu anmelden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in again"
+          }
+        }
+      }
+    },
+    "Nächster Tag (Alt+→)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next day (Alt+→)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jour suivant (Alt+→)"
+          }
+        }
+      }
+    },
+    "Später": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus tard"
+          }
+        }
+      }
+    },
+    "Startseite: Varianten für den Kopfbereich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home page: header variants"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page d’accueil : variantes de l’en-tête"
+          }
+        }
+      }
+    },
+    "Stoppen und buchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop and book"
+          }
+        }
+      }
+    },
+    "Suche nach Updates …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking for updates…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recherche de mises à jour…"
+          }
+        }
+      }
+    },
+    "Suche …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recherche…"
+          }
+        }
+      }
+    },
+    "Updates kommen über den Microsoft Store.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updates come through the Microsoft Store."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les mises à jour arrivent via le Microsoft Store."
+          }
+        }
+      }
+    },
+    "Version %@ installieren?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install version %@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installer la version %@ ?"
+          }
+        }
+      }
+    },
+    "Version %@ ist installiert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@ is installed."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La version %@ est installée."
+          }
+        }
+      }
+    },
+    "Version %@ wird installiert …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installing version %@…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation de la version %@…"
+          }
+        }
+      }
+    },
+    "Vorheriger Tag (Alt+←)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous day (Alt+←)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jour précédent (Alt+←)"
+          }
+        }
+      }
+    },
+    "Was ist neu in Version %@?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What’s new in version %@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quoi de neuf dans la version %@ ?"
+          }
+        }
+      }
+    },
+    "Zeigst du auf das Symbol im Infobereich, nennt ein Tooltip alle Zeiten von heute.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Point at the icon in the notification area to see all of today’s times."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pointez sur l’icône dans la zone de notification pour voir tous les temps du jour."
+          }
+        }
+      }
+    },
+    "Zeit buchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Book time"
+          }
+        }
+      }
+    },
+    "Zeiterfassung für Odoo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timesheets for Odoo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feuilles de temps pour Odoo"
+          }
+        }
+      }
+    },
+    "Zeiterfassung öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Timesheets"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir les feuilles de temps"
+          }
+        }
+      }
+    },
+    "Zeitraum löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete period"
+          }
+        }
+      }
+    },
+    "Zu heute (Alt+Pos1)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go to today (Alt+Home)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aller à aujourd’hui (Alt+Début)"
+          }
+        }
+      }
+    },
+    "Zum Anmelden auf das Uhrsymbol im Infobereich der Taskleiste klicken.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To sign in, click the clock icon in the notification area of the taskbar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour vous connecter, cliquez sur l’icône d’horloge dans la zone de notification de la barre des tâches."
+          }
+        }
+      }
+    },
+    "Ändern kannst du das jederzeit in den Einstellungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can change this anytime in settings."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous pouvez modifier cela à tout moment dans les paramètres."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

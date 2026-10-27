@@ -1,0 +1,68 @@
+# Zeiterfassung für Odoo – bauen, testen, Bildschirmfotos
+name: Build
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  core:
+    name: Tests der Abläufe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Tests
+        run: dotnet test --project tests/Zeiterfassung.Core.Tests
+
+  windows:
+    name: Windows-App
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Bauen ohne Paket
+        shell: pwsh
+        run: dotnet build src/Zeiterfassung.App -c Release -p:Platform=x64 -r win-x64 -p:WindowsPackageType=None -o build/lose
+
+      - name: Bildschirmfotos
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force build/bilder | Out-Null
+          $app = Start-Process -FilePath build/lose/Zeiterfassung.exe -ArgumentList '--screenshots', "$PWD\build\bilder" -PassThru
+          if (-not $app.WaitForExit(240000)) { $app.Kill(); Write-Error 'Bildschirmfotos hängen' }
+          Write-Host "Beendet mit $($app.ExitCode)"
+          Get-ChildItem build/bilder | Format-Table Name, Length
+          if (Test-Path build/bilder/protokoll.txt) { Get-Content build/bilder/protokoll.txt }
+          Get-WinEvent -LogName Application -MaxEvents 20 -ErrorAction SilentlyContinue |
+            Where-Object { $_.ProviderName -in '.NET Runtime', 'Application Error' } |
+            Format-List TimeCreated, ProviderName, Message
+
+      - name: Paket (MSIX, unsigniert)
+        shell: pwsh
+        run: >
+          msbuild src/Zeiterfassung.App/Zeiterfassung.App.csproj /restore /v:minimal
+          /p:Configuration=Release /p:Platform=x64 /p:RuntimeIdentifier=win-x64
+          /p:GenerateAppxPackageOnBuild=true /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxBundle=Never
+          /p:AppxPackageSigningEnabled=false /p:AppxPackageDir=$PWD\build\msix\
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bilder
+          path: build/bilder
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: msix-x64
+          path: build/msix
+          if-no-files-found: ignore

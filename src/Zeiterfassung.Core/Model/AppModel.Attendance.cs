@@ -259,7 +259,10 @@ public sealed partial class AppModel
     /// <summary>Text in den Feldern „von“ und „bis“.</summary>
     public void SetAttendanceEditorTimes(string from, string to)
     {
-        if (AttendanceEditor is { } editor) AttendanceEditor = editor with { From = from, To = to };
+        if (AttendanceEditor is { } editor && (editor.From != from || editor.To != to))
+        {
+            AttendanceEditor = editor with { From = from, To = to, Error = null };
+        }
     }
 
     public void CancelAttendanceEditing() => AttendanceEditor = null;

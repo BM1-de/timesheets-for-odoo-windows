@@ -140,15 +140,17 @@ public static class Loc
             if (!document.RootElement.TryGetProperty("strings", out var strings)) continue;
             foreach (var item in strings.EnumerateObject())
             {
-                var byLanguage = new Dictionary<string, Entry>(StringComparer.Ordinal) { ["de"] = new Entry(item.Name, null) };
-                if (item.Value.TryGetProperty("localizations", out var localizations))
+                // Windows.xcstrings ersetzt nur die Sprachen, die es nennt; die übrigen bleiben aus dem Mac-Katalog.
+                if (!catalog.TryGetValue(item.Name, out var byLanguage))
                 {
-                    foreach (var localization in localizations.EnumerateObject())
-                    {
-                        byLanguage[localization.Name] = ReadEntry(localization.Value);
-                    }
+                    byLanguage = new Dictionary<string, Entry>(StringComparer.Ordinal) { ["de"] = new Entry(item.Name, null) };
+                    catalog[item.Name] = byLanguage;
                 }
-                catalog[item.Name] = byLanguage;
+                if (!item.Value.TryGetProperty("localizations", out var localizations)) continue;
+                foreach (var localization in localizations.EnumerateObject())
+                {
+                    byLanguage[localization.Name] = ReadEntry(localization.Value);
+                }
             }
         }
         return catalog;

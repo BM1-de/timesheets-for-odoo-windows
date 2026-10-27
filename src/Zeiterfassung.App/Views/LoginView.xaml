@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Zeiterfassung für Odoo
+     Copyright (C) 2026 Baumgärtner Marketing GmbH
+     SPDX-License-Identifier: AGPL-3.0-or-later
+
+     Erste Anmeldung: Server und API-Schlüssel. Benutzername und Datenbank erscheinen nur, wenn der Server sie braucht
+     (Odoo 17/18, mehrere Datenbanken). -->
+<UserControl
+    x:Class="Zeiterfassung.App.Views.LoginView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:z="using:Zeiterfassung.App"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls">
+
+    <StackPanel Padding="20,20,20,20" Spacing="0">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <Image Source="ms-appx:///Assets/Square44x44Logo.targetsize-48.png" Width="40" Height="40" AutomationProperties.AccessibilityView="Raw" />
+            <TextBlock Text="{x:Bind HeadTitle, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
+        </StackPanel>
+        <TextBlock Margin="0,8,0,0" Text="{x:Bind HeadText, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                   TextWrapping="Wrap" />
+
+        <!-- Formular -->
+        <StackPanel Margin="0,16,0,0" Spacing="12" Visibility="{x:Bind z:Show.Unless(IsDone), Mode=OneWay}">
+            <TextBox x:Name="ServerBox" Header="{z:Str Key='Server'}" PlaceholderText="https://odoo.example.de" InputScope="Url"
+                     Text="{x:Bind Server, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind z:Show.Not(IsConnecting), Mode=OneWay}"
+                     IsSpellCheckEnabled="False" KeyDown="Field_KeyDown" />
+            <PasswordBox x:Name="KeyBox" Header="{z:Str Key='API-Schlüssel'}" PlaceholderText="{z:Str Key='Erforderlich'}"
+                         PasswordChanged="KeyBox_PasswordChanged" IsEnabled="{x:Bind z:Show.Not(IsConnecting), Mode=OneWay}"
+                         KeyDown="Field_KeyDown" />
+            <TextBox x:Name="LoginBox" Header="{z:Str Key='Benutzername'}" PlaceholderText="{z:Str Key='Login in Odoo, meist die E-Mail'}"
+                     Text="{x:Bind LoginName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" InputScope="EmailNameOrAddress"
+                     IsEnabled="{x:Bind z:Show.Not(IsConnecting), Mode=OneWay}" Visibility="{x:Bind z:Show.If(ShowsLogin), Mode=OneWay}"
+                     IsSpellCheckEnabled="False" KeyDown="Field_KeyDown" />
+            <TextBox x:Name="DatabaseBox" Header="{z:Str Key='Datenbank'}" PlaceholderText="{z:Str Key='Name der Datenbank'}"
+                     Text="{x:Bind Database, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     IsEnabled="{x:Bind z:Show.Not(IsConnecting), Mode=OneWay}" Visibility="{x:Bind z:Show.If(ShowsDatabase), Mode=OneWay}"
+                     IsSpellCheckEnabled="False" KeyDown="Field_KeyDown" />
+            <TextBlock Text="{z:Str Key='In Odoo: Profilbild oben rechts › Meine Präferenzen › Sicherheit › API-Schlüssel hinzufügen. Der Schlüssel wird in der Windows-Anmeldeinformationsverwaltung gespeichert.'}"
+                       Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" />
+            <Grid ColumnSpacing="8" Visibility="{x:Bind z:Show.IfText(ErrorText), Mode=OneWay}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <FontIcon Glyph="&#xE7BA;" FontSize="14" VerticalAlignment="Top" Margin="0,1,0,0"
+                          Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                <TextBlock Grid.Column="1" Text="{x:Bind ErrorText, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                           Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+            </Grid>
+            <Grid ColumnSpacing="12" Padding="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button Content="{z:Str Key='Abbrechen'}" Visibility="{x:Bind z:Show.If(CanCancel), Mode=OneWay}" Click="Cancel_Click" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" Visibility="{x:Bind z:Show.If(IsConnecting), Mode=OneWay}">
+                    <controls:ProgressRing Width="16" Height="16" IsActive="{x:Bind IsConnecting, Mode=OneWay}" />
+                    <TextBlock Text="{z:Str Key='Verbinde …'}" Style="{StaticResource SecondaryCaptionStyle}" VerticalAlignment="Center" />
+                </StackPanel>
+                <Button Grid.Column="3" Style="{StaticResource AccentButtonStyle}" Padding="20,5,20,6" Content="{z:Str Key='Verbinden'}"
+                        IsEnabled="{x:Bind CanConnect, Mode=OneWay}" Click="Connect_Click" />
+            </Grid>
+        </StackPanel>
+
+        <!-- Ergebnis -->
+        <StackPanel Margin="0,16,0,0" Spacing="8" Visibility="{x:Bind z:Show.If(IsDone), Mode=OneWay}">
+            <TextBlock Text="{z:Str Key='In Odoo gefunden'}" Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <Border Style="{StaticResource GroupStyle}">
+                <StackPanel>
+                    <Grid Padding="12,10,12,10" ColumnSpacing="12" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Glyph="{x:Bind TimesheetsGlyph, Mode=OneWay}" FontSize="16" VerticalAlignment="Top" Margin="0,2,0,0"
+                                  Foreground="{x:Bind TimesheetsBrush, Mode=OneWay}" />
+                        <StackPanel Grid.Column="1" Spacing="2">
+                            <TextBlock Text="{z:Str Key='Zeiterfassung'}" />
+                            <TextBlock Text="{x:Bind TimesheetsText, Mode=OneWay}" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid Padding="12,10,12,10" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Glyph="{x:Bind AttendanceGlyph, Mode=OneWay}" FontSize="16" VerticalAlignment="Top" Margin="0,2,0,0"
+                                  Foreground="{x:Bind AttendanceBrush, Mode=OneWay}" />
+                        <StackPanel Grid.Column="1" Spacing="2">
+                            <TextBlock Text="{z:Str Key='Anwesenheit'}" />
+                            <TextBlock Text="{x:Bind AttendanceText, Mode=OneWay}" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            <TextBlock Text="{z:Str Key='Ändern kannst du das jederzeit in den Einstellungen.'}" Style="{StaticResource SecondaryCaptionStyle}"
+                       TextWrapping="Wrap" />
+            <Button x:Name="DoneButton" Style="{StaticResource AccentButtonStyle}" Padding="24,5,24,6" HorizontalAlignment="Right" Margin="0,4,0,0"
+                    Content="{z:Str Key='Fertig'}" Click="Done_Click" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

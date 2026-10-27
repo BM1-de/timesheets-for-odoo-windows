@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Zeiterfassung für Odoo
+     Copyright (C) 2026 Baumgärtner Marketing GmbH
+     SPDX-License-Identifier: AGPL-3.0-or-later
+
+     Einstellungen wie in den Windows-Einstellungen: Karten mit Schalter oder Auswahl rechts. -->
+<Window
+    x:Class="Zeiterfassung.App.Views.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:z="using:Zeiterfassung.App"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="Root">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.Resources>
+            <Style x:Key="CardStyle" TargetType="Grid">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="{ThemeResource ControlCornerRadius}" />
+                <Setter Property="Padding" Value="16,12,16,12" />
+                <Setter Property="MinHeight" Value="68" />
+                <Setter Property="ColumnSpacing" Value="16" />
+            </Style>
+            <Style x:Key="GroupTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+                <Setter Property="Margin" Value="0,20,0,4" />
+            </Style>
+            <Style x:Key="CardIconStyle" TargetType="FontIcon">
+                <Setter Property="FontSize" Value="20" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+        </Grid.Resources>
+
+        <!-- Titelleiste -->
+        <Grid x:Name="TitleBar" Padding="16,0,0,0" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Image Source="ms-appx:///Assets/Square44x44Logo.targetsize-16.png" Width="16" Height="16" />
+            <TextBlock Grid.Column="1" Text="{x:Bind WindowTitle}" Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Padding="24,0,24,28" Spacing="4" MaxWidth="760">
+                <TextBlock Text="{z:Str Key='Einstellungen'}" Style="{StaticResource TitleTextBlockStyle}" Margin="0,4,0,16" />
+
+                <!-- Funktionen -->
+                <TextBlock Text="{z:Str Key='Funktionen'}" Style="{StaticResource GroupTitleStyle}" Margin="0,8,0,4" />
+                <Grid Style="{StaticResource CardStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon Glyph="&#xE916;" Style="{StaticResource CardIconStyle}" />
+                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="{z:Str Key='Zeiterfassung'}" />
+                        <TextBlock Text="{z:Str Key='Stunden auf Projekte und Aufgaben buchen'}" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,0">
+                            <FontIcon Glyph="{x:Bind TimesheetsStatus.Glyph, Mode=OneWay}" FontSize="12" Foreground="{x:Bind TimesheetsStatus.Brush, Mode=OneWay}" />
+                            <TextBlock Text="{x:Bind TimesheetsStatus.Text, Mode=OneWay}" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="2" MinWidth="0" IsOn="{x:Bind TimesheetsOn, Mode=OneWay}" Toggled="Timesheets_Toggled"
+                                  IsEnabled="{x:Bind TimesheetsAvailable, Mode=OneWay}" AutomationProperties.Name="{z:Str Key='Zeiterfassung'}" />
+                </Grid>
+                <Grid Style="{StaticResource CardStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon Glyph="&#xE77B;" Style="{StaticResource CardIconStyle}" />
+                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="{z:Str Key='Anwesenheit'}" />
+                        <TextBlock Text="{z:Str Key='Ein- und ausstempeln, Arbeitszeit des Tages'}" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" />
+                        <Grid ColumnSpacing="6" Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <FontIcon Glyph="{x:Bind AttendanceStatus.Glyph, Mode=OneWay}" FontSize="12" VerticalAlignment="Top" Margin="0,2,0,0"
+                                      Foreground="{x:Bind AttendanceStatus.Brush, Mode=OneWay}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind AttendanceStatus.Text, Mode=OneWay}" Style="{StaticResource SecondaryCaptionStyle}"
+                                       TextWrapping="Wrap" />
+                        </Grid>
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="2" MinWidth="0" IsOn="{x:Bind AttendanceOn, Mode=OneWay}" Toggled="Attendance_Toggled"
+                                  IsEnabled="{x:Bind AttendanceAvailable, Mode=OneWay}" AutomationProperties.Name="{z:Str Key='Anwesenheit'}" />
+                </Grid>
+                <Grid Style="{StaticResource CardStyle}" Padding="52,12,16,12" Visibility="{x:Bind z:Show.If(ShowsAttendanceCompany), Mode=OneWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="{z:Str Key='Stempeln für'}" />
+                        <TextBlock Text="{z:Str Key='Anwesenheiten führt Odoo je Firma.'}" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ComboBox x:Name="AttendanceCompanyBox" Grid.Column="1" MinWidth="220" VerticalAlignment="Center"
+                              SelectionChanged="AttendanceCompany_SelectionChanged" AutomationProperties.Name="{z:Str Key='Stempeln für'}" />
+                </Grid>
+                <Grid ColumnSpacing="16" Padding="2,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{x:Bind FeatureHint, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                               Foreground="{x:Bind FeatureHintBrush, Mode=OneWay}" />
+                    <Button Grid.Column="1" Content="{x:Bind RecheckTitle, Mode=OneWay}" IsEnabled="{x:Bind CanRecheck, Mode=OneWay}"
+                            Click="Recheck_Click" VerticalAlignment="Top" />
+                </Grid>
+
+                <!-- Infobereich -->
+                <TextBlock Text="{z:Str Key='Infobereich der Taskleiste'}" Style="{StaticResource GroupTitleStyle}" />
+                <Grid Style="{StaticResource CardStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon Glyph="&#xE823;" Style="{StaticResource CardIconStyle}" />
+                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="{z:Str Key='Laufende Projektzeit am Symbol zeigen'}" Foreground="{x:Bind DotLabelBrush, Mode=OneWay}" />
+                        <TextBlock Text="{z:Str Key='Grüner Punkt am Symbol, Projekt und Zeit im Tooltip. Läuft keine Projektzeit, bleibt das Symbol ohne Punkt.'}"
+                                   Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="2" MinWidth="0" IsOn="{x:Bind DotOn, Mode=OneWay}" Toggled="Dot_Toggled"
+                                  IsEnabled="{x:Bind Model.TimesheetsActive, Mode=OneWay}"
+                                  AutomationProperties.Name="{z:Str Key='Laufende Projektzeit am Symbol zeigen'}" />
+                </Grid>
+                <TextBlock Text="{z:Str Key='Zeigst du auf das Symbol im Infobereich, nennt ein Tooltip alle Zeiten von heute.'}"
+                           Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" Padding="2,8,0,0" />
+
+                <!-- Konto -->
+                <TextBlock Text="{z:Str Key='Konto'}" Style="{StaticResource GroupTitleStyle}" />
+                <Border Style="{StaticResource GroupStyle}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                    <StackPanel>
+                        <StackPanel Visibility="{x:Bind z:Show.If(IsSignedIn), Mode=OneWay}">
+                            <Grid Padding="16,0,16,0" MinHeight="48" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                                <TextBlock Text="{z:Str Key='Odoo'}" VerticalAlignment="Center" />
+                                <TextBlock Text="{x:Bind Model.ServerDisplay, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Grid>
+                            <Grid Padding="16,0,16,0" MinHeight="48" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                                <TextBlock Text="{z:Str Key='Schnittstelle'}" VerticalAlignment="Center" />
+                                <TextBlock Text="{x:Bind Model.InterfaceDisplay, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Grid>
+                            <Grid Padding="16,0,16,0" MinHeight="48" ColumnSpacing="16" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                  BorderThickness="0,0,0,1" Visibility="{x:Bind z:Show.IfText(CompaniesText), Mode=OneWay}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{z:Str Key='Firmen'}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{x:Bind CompaniesText, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                           ToolTipService.ToolTip="{x:Bind CompaniesText, Mode=OneWay}" />
+                            </Grid>
+                            <Grid Padding="16,0,16,0" MinHeight="56" ColumnSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{z:Str Key='Angemeldet als'}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{x:Bind Model.UserName, Mode=OneWay}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           VerticalAlignment="Center" />
+                                <Button Grid.Column="2" Content="{z:Str Key='Abmelden …'}" Click="SignOut_Click" VerticalAlignment="Center" />
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel Visibility="{x:Bind z:Show.Unless(IsSignedIn), Mode=OneWay}" Padding="16,12,16,12" Spacing="4">
+                            <Grid>
+                                <TextBlock Text="{z:Str Key='Status'}" />
+                                <TextBlock Text="{z:Str Key='Nicht angemeldet'}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Right" />
+                            </Grid>
+                            <TextBlock Text="{z:Str Key='Zum Anmelden auf das Uhrsymbol im Infobereich der Taskleiste klicken.'}"
+                                       Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Allgemein -->
+                <TextBlock Text="{z:Str Key='Allgemein'}" Style="{StaticResource GroupTitleStyle}" />
+                <Grid Style="{StaticResource CardStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon Glyph="&#xE7E8;" Style="{StaticResource CardIconStyle}" />
+                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="{z:Str Key='Mit Windows starten'}" Foreground="{x:Bind AutostartLabelBrush, Mode=OneWay}" />
+                        <TextBlock Text="{z:Str Key='Beim Anmelden bei Windows im Infobereich öffnen'}" Style="{StaticResource SecondaryCaptionStyle}"
+                                   TextWrapping="Wrap" Visibility="{x:Bind z:Show.Unless(AutostartBlocked), Mode=OneWay}" />
+                        <StackPanel Visibility="{x:Bind z:Show.If(AutostartBlocked), Mode=OneWay}" Spacing="2">
+                            <Grid ColumnSpacing="6" Margin="0,2,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE946;" FontSize="12" VerticalAlignment="Top" Margin="0,2,0,0"
+                                          Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                <TextBlock Grid.Column="1" Text="{x:Bind AutostartBlockedText, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}"
+                                           TextWrapping="Wrap" />
+                            </Grid>
+                            <HyperlinkButton Content="{z:Str Key='Autostart-Einstellungen öffnen'}" FontSize="12" Padding="6,4,6,4" Margin="-6,4,0,0"
+                                             Click="OpenAutostartSettings_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="2" MinWidth="0" IsOn="{x:Bind AutostartOn, Mode=OneWay}" Toggled="Autostart_Toggled"
+                                  IsEnabled="{x:Bind AutostartChangeable, Mode=OneWay}" AutomationProperties.Name="{z:Str Key='Mit Windows starten'}" />
+                </Grid>
+                <Grid Style="{StaticResource CardStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon Glyph="&#xE916;" Style="{StaticResource CardIconStyle}" />
+                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="{z:Str Key='Dauer beim Buchen runden'}" />
+                        <TextBlock Text="{x:Bind RoundingExplanation}" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ComboBox x:Name="RoundingBox" Grid.Column="2" MinWidth="140" VerticalAlignment="Center" SelectionChanged="Rounding_SelectionChanged"
+                              AutomationProperties.Name="{z:Str Key='Dauer beim Buchen runden'}" />
+                </Grid>
+
+                <!-- Updates (nur die Download-Fassung) -->
+                <StackPanel Spacing="4" Visibility="{x:Bind z:Show.If(ShowsUpdates)}">
+                    <TextBlock Text="{z:Str Key='Updates'}" Style="{StaticResource GroupTitleStyle}" />
+                    <Border Style="{StaticResource GroupStyle}">
+                        <StackPanel>
+                            <Grid Style="{StaticResource CardStyle}" BorderThickness="0,0,0,1" CornerRadius="0" Background="Transparent"
+                                  BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE895;" Style="{StaticResource CardIconStyle}" />
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{z:Str Key='Automatisch nach Updates suchen'}" />
+                                    <TextBlock Text="{z:Str Key='Einmal am Tag; eine neue Version zeigt das Fenster im Infobereich an'}"
+                                               Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="2" MinWidth="0" IsOn="{x:Bind Model.Preferences.ChecksForUpdates, Mode=OneWay}"
+                                              Toggled="AutoUpdate_Toggled" AutomationProperties.Name="{z:Str Key='Automatisch nach Updates suchen'}" />
+                            </Grid>
+                            <Grid Style="{StaticResource CardStyle}" BorderThickness="0" CornerRadius="0" Background="Transparent">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE81C;" Style="{StaticResource CardIconStyle}" />
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{z:Str Key='Zuletzt gesucht'}" />
+                                    <TextBlock Text="{x:Bind Updates.LastCheckText, Mode=OneWay}" Style="{StaticResource SecondaryCaptionStyle}" />
+                                </StackPanel>
+                                <Button Grid.Column="2" Content="{x:Bind CheckTitle, Mode=OneWay}" IsEnabled="{x:Bind CanCheck, Mode=OneWay}"
+                                        Click="CheckUpdates_Click" VerticalAlignment="Center" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="{z:Str Key='Die App lädt dafür einmal am Tag die Versionsliste von GitHub und installiert nur Versionen mit der Signatur des Projekts.'}"
+                               Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" Padding="2,8,0,0" />
+                </StackPanel>
+
+                <!-- Über -->
+                <TextBlock Text="{x:Bind AboutTitle}" Style="{StaticResource GroupTitleStyle}" />
+                <Border Style="{StaticResource GroupStyle}">
+                    <StackPanel>
+                        <Grid Padding="16,0,16,0" MinHeight="48" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                            <TextBlock Text="{z:Str Key='Version'}" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Bind VersionText}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Right"
+                                       VerticalAlignment="Center" IsTextSelectionEnabled="True" />
+                        </Grid>
+                        <Grid Padding="16,0,16,0" MinHeight="48">
+                            <TextBlock Text="{z:Str Key='Quellcode und Lizenz'}" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <HyperlinkButton Content="GitHub" Padding="4,2,4,2" NavigateUri="https://github.com/BM1-de/timesheets-for-odoo-windows" />
+                                <HyperlinkButton Content="AGPL-3.0" Padding="4,2,4,2" NavigateUri="https://www.gnu.org/licenses/agpl-3.0.html" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="{x:Bind AboutFooter}" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap" Padding="2,8,0,0" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
