@@ -47,6 +47,11 @@ The demo uses invented data held in memory; it sends nothing over the network.
 - **Kurzbeschreibung:** Stunden auf Projekte und Aufgaben buchen oder mit Start und Stopp messen,
   ein- und ausstempeln, direkt aus dem Infobereich der Taskleiste.
 - **Suchbegriffe:** Odoo · Zeiterfassung · Stundenzettel · Timesheet · Anwesenheit · Stempeluhr · Arbeitszeit
+- **Bildunterschriften:**
+  1. Projektzeit starten und stoppen, direkt über dem Uhrsymbol im Infobereich der Taskleiste.
+  2. Stoppen bucht die Zeit sofort in Odoo, mit Projekt, Aufgabe und Beschreibung.
+  3. Einträge per Klick ändern oder löschen.
+  4. Zeiterfassung und Anwesenheit einzeln einschalten; die App prüft, welche Odoo-Apps installiert sind.
 
 **Beschreibung**
 
@@ -89,6 +94,11 @@ Freie Software (AGPL-3.0), der Quellcode liegt auf GitHub. Odoo ist eine Marke d
 - **Short description:** Book hours to projects and tasks or time them with start and stop, check
   in and out, right from the notification area of your taskbar.
 - **Search terms:** Odoo · timesheet · time tracking · attendance · time clock · hours · projects
+- **Captions:**
+  1. Start and stop the timer right above the clock icon in the notification area of the taskbar.
+  2. Stopping books the time to Odoo right away, with project, task and description.
+  3. Edit or delete entries with a click.
+  4. Switch timesheets and attendance on or off; the app checks which Odoo apps are installed.
 
 **Description**
 
@@ -131,6 +141,11 @@ Free software (AGPL-3.0), source code on GitHub. Odoo is a trademark of Odoo S.A
 - **Description courte :** Saisissez vos heures sur projets et tâches ou mesurez-les avec le
   minuteur, pointez l’arrivée et le départ, depuis la zone de notification de la barre des tâches.
 - **Termes de recherche :** Odoo · feuille de temps · suivi du temps · présence · pointeuse · heures · projets
+- **Légendes :**
+  1. Démarrez et arrêtez le minuteur juste au-dessus de l’horloge, dans la zone de notification de la barre des tâches.
+  2. L’arrêt enregistre aussitôt le temps dans Odoo, avec projet, tâche et description.
+  3. Modifiez ou supprimez une saisie d’un clic.
+  4. Activez séparément les feuilles de temps et la présence ; l’app vérifie quelles applications Odoo sont installées.
 
 **Description**
 
