@@ -149,7 +149,9 @@ public sealed partial class LoginView : UserControl, INotifyPropertyChanged
     public Task ConnectForScreenshotsAsync(string serverAddress, string key)
     {
         Server = serverAddress;
+        // PasswordChanged kommt erst später; der Schlüssel muss aber schon jetzt für das Verbinden bereitstehen.
         KeyBox.Password = key;
+        apiKey = key;
         return ConnectAsync();
     }
 
