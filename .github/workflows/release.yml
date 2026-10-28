@@ -2,15 +2,15 @@
 # Copyright (C) 2026 Baumgärtner Marketing GmbH
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
-# Ein Tag v<Version> baut die App für x64 und ARM64, fasst beide Pakete zu einem MSIX-Bündel zusammen, signiert es mit
-# Azure Artifact Signing, schreibt die App-Installer-Datei und legt den Release an. Sind die Angaben aus dem Partner
-# Center hinterlegt, entsteht daneben das Bündel für den Microsoft Store (Artefakt „store“). Von Hand gestartet
-# (Actions › Release › Run workflow) entstehen nur Artefakte; ohne Zugang zu Artifact Signing ist das Bündel nicht
-# signiert.
+# Ein Tag v<Version> baut die App für x64 und ARM64 als MSIX-Bündel für den Microsoft Store (Artefakt „store“, wird in
+# der Einreichung hochgeladen) und legt den Release mit den Notizen aus CHANGELOG.md an. Ist Azure Artifact Signing
+# eingerichtet, entstehen dazu das signierte Bündel und die App-Installer-Datei für den Download von GitHub; ohne
+# Signatur ließe sich dieses Bündel nicht installieren, deshalb fehlt es dann. Von Hand gestartet (Actions › Release ›
+# Run workflow) entstehen nur Artefakte, das Bündel für GitHub dann unsigniert zum Testen.
 #
-# Variablen: MSIX_PUBLISHER, AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID,
-#            SIGNING_ENDPOINT, SIGNING_ACCOUNT, SIGNING_PROFILE,
-#            STORE_IDENTITY_NAME, STORE_PUBLISHER, STORE_PUBLISHER_DISPLAY_NAME (für den Store)
+# Variablen: STORE_IDENTITY_NAME, STORE_PUBLISHER, STORE_PUBLISHER_DISPLAY_NAME, STORE_PRODUCT_ID (Microsoft Store);
+#            MSIX_PUBLISHER, AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID,
+#            SIGNING_ENDPOINT, SIGNING_ACCOUNT, SIGNING_PROFILE (nur für den Download von GitHub)
 # Umgebung:  release (Anmeldung bei Azure über OpenID Connect)
 # Einrichtung: RELEASE.md
 
@@ -30,6 +30,9 @@ concurrency:
 
 env:
   IS_RELEASE: ${{ github.ref_type == 'tag' }}
+  CAN_SIGN: ${{ vars.SIGNING_ACCOUNT != '' }}
+  HAS_STORE: ${{ vars.STORE_IDENTITY_NAME != '' }}
+  HAS_GITHUB: ${{ vars.SIGNING_ACCOUNT != '' || github.ref_type != 'tag' }}
 
 jobs:
   setup:
@@ -64,11 +67,12 @@ jobs:
 
       - name: Pakete festlegen
         id: matrix
-        env:
-          HAS_STORE: ${{ vars.STORE_IDENTITY_NAME != '' }}
         run: |
-          VARIANTS='"github"'
-          [[ "$HAS_STORE" == "true" ]] && VARIANTS+=',"store"'
+          VARIANTS=()
+          [[ "$HAS_GITHUB" == "true" ]] && VARIANTS+=('"github"')
+          [[ "$HAS_STORE" == "true" ]] && VARIANTS+=('"store"')
+          [[ ${#VARIANTS[@]} -gt 0 ]] || { echo "::error::Weder Microsoft Store noch Artifact Signing eingerichtet, siehe RELEASE.md"; exit 1; }
+          VARIANTS=$(IFS=,; echo "${VARIANTS[*]}")
           echo "matrix={\"variant\":[$VARIANTS],\"platform\":[\"x64\",\"ARM64\"],\"include\":[{\"platform\":\"x64\",\"rid\":\"win-x64\"},{\"platform\":\"ARM64\",\"rid\":\"win-arm64\"}]}" >> "$GITHUB_OUTPUT"
 
   package:
@@ -127,12 +131,11 @@ jobs:
       id-token: write
     env:
       VERSION: ${{ needs.setup.outputs.version }}
-      CAN_SIGN: ${{ vars.SIGNING_ACCOUNT != '' }}
-      HAS_STORE: ${{ vars.STORE_IDENTITY_NAME != '' }}
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/download-artifact@v8
+        if: env.HAS_GITHUB == 'true'
         with:
           pattern: msix-github-*
           path: build/github
@@ -151,19 +154,14 @@ jobs:
           $makeappx = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin\10.*\x64\makeappx.exe' |
             Sort-Object FullName -Descending | Select-Object -First 1
           New-Item -ItemType Directory -Force build/release, build/store-bundle | Out-Null
-          & $makeappx.FullName bundle /d build/github /p "build/release/Zeiterfassung_$($env:VERSION).msixbundle" /bv "$($env:VERSION).0" /o
-          if ($LASTEXITCODE) { throw 'Bündel gescheitert' }
+          if ($env:HAS_GITHUB -eq 'true') {
+            & $makeappx.FullName bundle /d build/github /p "build/release/Zeiterfassung_$($env:VERSION).msixbundle" /bv "$($env:VERSION).0" /o
+            if ($LASTEXITCODE) { throw 'Bündel gescheitert' }
+          }
           if ($env:HAS_STORE -eq 'true') {
             & $makeappx.FullName bundle /d build/store /p "build/store-bundle/Zeiterfassung_$($env:VERSION)_Store.msixbundle" /bv "$($env:VERSION).0" /o
             if ($LASTEXITCODE) { throw 'Store-Bündel gescheitert' }
           }
-
-      - name: Für ein Release wird signiert
-        if: env.IS_RELEASE == 'true' && env.CAN_SIGN != 'true'
-        shell: pwsh
-        run: |
-          Write-Error 'Ohne Artifact Signing lässt sich der Release nicht installieren; Variablen siehe RELEASE.md.'
-          exit 1
 
       - uses: azure/login@v3
         if: env.CAN_SIGN == 'true'
@@ -185,6 +183,7 @@ jobs:
           timestamp-digest: SHA256
 
       - name: App-Installer-Datei
+        if: env.HAS_GITHUB == 'true'
         shell: pwsh
         env:
           MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER }}
@@ -193,6 +192,7 @@ jobs:
           scripts/make-appinstaller.ps1 -Version $env:VERSION -Bundle "Zeiterfassung_$($env:VERSION).msixbundle" -Output build/release/Zeiterfassung.appinstaller
 
       - uses: actions/upload-artifact@v7
+        if: env.HAS_GITHUB == 'true'
         with:
           name: release
           path: build/release
@@ -218,6 +218,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - uses: actions/download-artifact@v8
+        if: env.CAN_SIGN == 'true'
         with:
           name: release
           path: build/release
@@ -225,12 +226,19 @@ jobs:
       - name: Release anlegen
         env:
           GH_TOKEN: ${{ github.token }}
+          STORE_PRODUCT_ID: ${{ vars.STORE_PRODUCT_ID }}
         run: |
           awk -v version="$VERSION" '
             index($0, "## " version " ") == 1 { found = 1; next }
             found && /^## / { exit }
             found { print }
           ' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
-          printf '\n%s\n' "Zum Installieren „Zeiterfassung.appinstaller“ laden und öffnen. Installierte Versionen aktualisieren sich über „Nach Updates suchen …“. / To install, download and open “Zeiterfassung.appinstaller”. Installed versions update via “Check for updates…”." >> "$RUNNER_TEMP/notes.md"
-          gh release create "$GITHUB_REF_NAME" --title "Zeiterfassung für Odoo $VERSION" --notes-file "$RUNNER_TEMP/notes.md" \
-            "build/release/Zeiterfassung_$VERSION.msixbundle" build/release/Zeiterfassung.appinstaller
+          if [[ -n "$STORE_PRODUCT_ID" ]]; then
+            printf '\n%s\n' "Installieren über den Microsoft Store / Install from the Microsoft Store: https://apps.microsoft.com/detail/$STORE_PRODUCT_ID" >> "$RUNNER_TEMP/notes.md"
+          fi
+          FILES=()
+          if [[ "$CAN_SIGN" == "true" ]]; then
+            printf '\n%s\n' "Ohne Store „Zeiterfassung.appinstaller“ laden und öffnen; installierte Versionen aktualisieren sich über „Nach Updates suchen …“. / Without the Store, download and open “Zeiterfassung.appinstaller”; installed versions update via “Check for updates…”." >> "$RUNNER_TEMP/notes.md"
+            FILES=("build/release/Zeiterfassung_$VERSION.msixbundle" build/release/Zeiterfassung.appinstaller)
+          fi
+          gh release create "$GITHUB_REF_NAME" --title "Zeiterfassung für Odoo $VERSION" --notes-file "$RUNNER_TEMP/notes.md" "${FILES[@]}"

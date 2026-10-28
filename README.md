@@ -52,9 +52,7 @@ Abläufe, dieselben Texte und dieselben Tests, umgesetzt mit WinUI 3.
   die Flyouts von Windows 11. Tastatur: `Eingabe` trägt ein, `Esc` bricht ab oder schließt das
   Fenster, `Alt+←` und `Alt+→` blättern, `Alt+Pos1` springt zu heute, `F5` oder `Strg+R` lädt
   neu, `Strg+,` öffnet die Einstellungen. Beschriftungen für die Sprachausgabe.
-- **Updates:** Die Fassung von GitHub sucht einmal am Tag nach einer neuen Version, weist im
-  Fenster darauf hin und installiert sie auf Klick. Die Fassung aus dem Microsoft Store
-  aktualisiert der Store.
+- **Updates:** kommen über den Microsoft Store.
 - **Sprachen:** Deutsch, Englisch und Französisch, nach der Sprache von Windows. Datum und Uhrzeit
   folgen der eingestellten Region, auch mit 12-Stunden-Uhr.
 
@@ -133,26 +131,17 @@ bis zum Beenden der App erhalten und verlässt den Rechner nicht.
 
 ## Installation
 
-Unter [Releases](https://github.com/BM1-de/timesheets-for-odoo-windows/releases/latest)
-`Zeiterfassung.appinstaller` laden und öffnen; der App-Installer von Windows zeigt Herausgeber und
-Version und installiert die App. Sie steht danach im Startmenü und startet mit Windows; abschalten
-lässt sich das in ihren Einstellungen oder unter *Einstellungen › Apps › Autostart*.
+Die App kommt aus dem Microsoft Store:
+[Zeiterfassung für Odoo](https://apps.microsoft.com/detail/9PLPXXJ8QH0Q) (der Eintrag erscheint,
+sobald Microsoft die erste Version freigegeben hat). In der Eingabeaufforderung geht es auch mit
 
-### Fassung für den Microsoft Store
+```powershell
+winget install --id 9PLPXXJ8QH0Q --source msstore
+```
 
-Für den Microsoft Store gibt es eine eigene Fassung: Updates kommen über den Store, und *Mit
-Windows starten* schaltet man selbst in den Einstellungen der App ein. Sonst kann sie dasselbe.
-Texte und Angaben für den Eintrag stehen in [docs/store.md](docs/store.md).
-
-## Updates
-
-Die Fassung von GitHub liest einmal am Tag die Datei
-[`Zeiterfassung.appinstaller`](https://github.com/BM1-de/timesheets-for-odoo-windows/releases/latest/download/Zeiterfassung.appinstaller)
-des neuesten Releases. Nennt sie eine neuere Version, erscheint im Fenster *Version … ist
-verfügbar* mit *Installieren …*; Windows lädt das neue Paket, prüft seine Signatur, ersetzt die
-App und startet sie neu. Von Hand: *Nach Updates suchen …* im Menü der Uhr oder in den
-Einstellungen, wo sich die tägliche Suche auch abschalten lässt. Außer dieser Datei lädt die
-Update-Suche nichts und sendet keine Daten.
+Sie steht danach im Startmenü, Updates kommen über den Store. *Mit Windows starten* schaltet man in
+den Einstellungen der App ein. Texte und Angaben für den Eintrag stehen in
+[docs/store.md](docs/store.md).
 
 ## Selbst bauen
 

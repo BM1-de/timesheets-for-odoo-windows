@@ -7,9 +7,10 @@ Texte und Angaben für das Partner Center. Das Paket für den Store baut der Rel
 
 | Feld | Wert |
 |---|---|
+| Store-ID | `9PLPXXJ8QH0Q`, Eintrag https://apps.microsoft.com/detail/9PLPXXJ8QH0Q |
 | Reservierte Namen | Zeiterfassung für Odoo · Timesheets for Odoo · Feuilles de temps pour Odoo |
-| Paketidentität | aus *Produktverwaltung › Produktidentität*: `Package/Identity/Name`, `Package/Identity/Publisher`, `Package/Properties/PublisherDisplayName`; als Variablen `STORE_IDENTITY_NAME`, `STORE_PUBLISHER`, `STORE_PUBLISHER_DISPLAY_NAME` im Repository hinterlegen |
-| Kategorie | Geschäftlich › Zeit und Ausgaben |
+| Paketidentität | aus *Produktverwaltung › Produktidentität*: `Package/Identity/Name`, `Package/Identity/Publisher`, `Package/Properties/PublisherDisplayName`; als Variablen `STORE_IDENTITY_NAME`, `STORE_PUBLISHER`, `STORE_PUBLISHER_DISPLAY_NAME` im Repository hinterlegt |
+| Kategorie | Unternehmen › Zeit- + Kostenplanung |
 | Preis | kostenlos, alle Märkte |
 | Altersfreigabe | IARC-Fragebogen; keine Frage trifft zu (3+) |
 | Datenschutz-URL | https://github.com/BM1-de/timesheets-for-odoo/blob/main/PRIVACY.md (gilt für alle Fassungen, Windows muss vor der ersten Einreichung dort ergänzt sein) |
