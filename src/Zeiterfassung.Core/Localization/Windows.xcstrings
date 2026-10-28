@@ -613,6 +613,22 @@
         }
       }
     },
+    "Siehst du das Uhrsymbol nicht in der Taskleiste, liegt es hinter dem Pfeil im Infobereich. Zieh es von dort auf die Taskleiste, dann bleibt es sichtbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you don’t see the clock icon on the taskbar, it’s behind the arrow in the notification area. Drag it from there onto the taskbar to keep it visible."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si vous ne voyez pas l’icône d’horloge dans la barre des tâches, elle se trouve derrière la flèche de la zone de notification. Faites-la glisser de là vers la barre des tâches pour qu’elle reste visible."
+          }
+        }
+      }
+    },
     "Später": {
       "localizations": {
         "en": {

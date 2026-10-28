@@ -98,6 +98,17 @@
             </Border>
             <TextBlock Text="{z:Str Key='Ändern kannst du das jederzeit in den Einstellungen.'}" Style="{StaticResource SecondaryCaptionStyle}"
                        TextWrapping="Wrap" />
+            <!-- Windows legt neue Symbole erst hinter den Pfeil im Infobereich. -->
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <FontIcon Glyph="&#xE70E;" FontSize="12" VerticalAlignment="Top" Margin="0,2,0,0"
+                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock Grid.Column="1" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap"
+                           Text="{z:Str Key='Siehst du das Uhrsymbol nicht in der Taskleiste, liegt es hinter dem Pfeil im Infobereich. Zieh es von dort auf die Taskleiste, dann bleibt es sichtbar.'}" />
+            </Grid>
             <Button x:Name="DoneButton" Style="{StaticResource AccentButtonStyle}" Padding="24,5,24,6" HorizontalAlignment="Right" Margin="0,4,0,0"
                     Content="{z:Str Key='Fertig'}" Click="Done_Click" />
         </StackPanel>
