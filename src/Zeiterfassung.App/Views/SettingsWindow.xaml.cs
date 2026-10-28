@@ -30,8 +30,13 @@ public sealed partial class SettingsWindow : Window, INotifyPropertyChanged
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(TitleBar);
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "App.ico"));
+        // Mittig auf dem Bildschirm, auf dem geklickt wurde, und nie größer als dessen Arbeitsfläche.
         var scale = Native.ScaleFor(this);
-        AppWindow.Resize(new SizeInt32((int)(620 * scale), (int)(780 * scale)));
+        NativeMethods.GetCursorPos(out var cursor);
+        var work = DisplayArea.GetFromPoint(new PointInt32(cursor.X, cursor.Y), DisplayAreaFallback.Primary).WorkArea;
+        var size = new SizeInt32(Math.Min((int)(620 * scale), work.Width), Math.Min((int)(780 * scale), work.Height));
+        AppWindow.Resize(size);
+        AppWindow.Move(new PointInt32(work.X + (work.Width - size.Width) / 2, work.Y + (work.Height - size.Height) / 2));
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
             presenter.IsMaximizable = false;
