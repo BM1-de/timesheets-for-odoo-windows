@@ -91,9 +91,10 @@ public static class ScreenshotMode
         log("Fenster gezeigt");
         await Capture(window, folder, "01-anmeldung", log);
 
-        await model.SignInAsync("demo", "", null, null);
+        // Angemeldet über die Ansicht selbst, damit auch die Seite „Verbunden“ ins Bild kommt.
+        await window.PanelView.LoginView.ConnectForScreenshotsAsync("demo", "demo");
         await Capture(window, folder, "01-verbunden", log);
-        model.FinishSignIn();
+        window.PanelView.LoginView.Finish();
         await model.RefreshAsync(force: true);
         log($"Tooltip: {model.TrayContent.ToolTip.Replace('\n', '|')}");
         await Capture(window, folder, "02-tag", log);

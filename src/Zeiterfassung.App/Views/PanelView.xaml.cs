@@ -52,6 +52,8 @@ public sealed partial class PanelView : UserControl, INotifyPropertyChanged
 
     public Updates Updates { get; }
 
+    public LoginView LoginView => Login;
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>Einstellungen öffnen, etwa über das Zahnrad.</summary>

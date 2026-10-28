@@ -145,6 +145,14 @@ public sealed partial class LoginView : UserControl, INotifyPropertyChanged
 
     private async void Connect_Click(object sender, RoutedEventArgs e) => await ConnectAsync();
 
+    /// <summary>Für die Bildschirmfotos: Server und Schlüssel eintragen und verbinden; danach steht die Seite „Verbunden“.</summary>
+    public Task ConnectForScreenshotsAsync(string serverAddress, string key)
+    {
+        Server = serverAddress;
+        KeyBox.Password = key;
+        return ConnectAsync();
+    }
+
     private async void Field_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key != VirtualKey.Enter || !CanConnect) return;
@@ -191,7 +199,10 @@ public sealed partial class LoginView : UserControl, INotifyPropertyChanged
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => model?.CancelSignIn();
 
-    private void Done_Click(object sender, RoutedEventArgs e)
+    private void Done_Click(object sender, RoutedEventArgs e) => Finish();
+
+    /// <summary>„Fertig“ auf der Seite „Verbunden“: weiter zum Tag.</summary>
+    public void Finish()
     {
         Result = null;
         didPrefill = false;
