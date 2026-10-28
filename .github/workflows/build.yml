@@ -65,7 +65,7 @@ jobs:
           $failed = $false
           # Ein großer Bildschirm, damit lange Ansichten ganz aufs Bild passen.
           Set-DisplayResolution -Width 1920 -Height 1200 -Force -ErrorAction Continue
-          foreach ($run in 'de hell', 'de dunkel', 'en hell') {
+          foreach ($run in 'de hell', 'de dunkel', 'en hell', 'fr hell') {
             $language, $look = $run -split ' '
             $folder = "$PWD\build\bilder\$language-$look"
             New-Item -ItemType Directory -Force $folder | Out-Null
