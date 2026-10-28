@@ -78,6 +78,8 @@ public sealed class Updates
         get
         {
             if (manualCheck && State == UpdateState.UpToDate) return Loc.T("Gerade eben: Du hast die neueste Version.");
+            if (manualCheck && State == UpdateState.Available) return Loc.T("Gerade eben: Version %@ ist verfügbar.", AvailableVersion ?? "");
+            if (manualCheck && State == UpdateState.Failed) return Loc.T("Gerade eben: Die Suche ist gescheitert.");
             if (preferences.LastUpdateCheck is not { } last) return Loc.T("noch nie");
             var local = last.ToLocalTime();
             return local.ToString(Formatting.Culture.DateTimeFormat.ShortDatePattern + " " + Formatting.Culture.DateTimeFormat.ShortTimePattern,

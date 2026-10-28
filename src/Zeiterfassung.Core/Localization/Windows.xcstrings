@@ -397,6 +397,22 @@
         }
       }
     },
+    "Gerade eben: Die Suche ist gescheitert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just now: the check failed."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l’instant : la recherche a échoué."
+          }
+        }
+      }
+    },
     "Gerade eben: Du hast die neueste Version.": {
       "localizations": {
         "en": {
@@ -409,6 +425,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "À l’instant : vous avez la dernière version."
+          }
+        }
+      }
+    },
+    "Gerade eben: Version %@ ist verfügbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just now: version %@ is available."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l’instant : la version %@ est disponible."
           }
         }
       }
