@@ -5,6 +5,7 @@
 using System.ComponentModel;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
@@ -372,7 +373,7 @@ public sealed partial class PanelView : UserControl, INotifyPropertyChanged
 
     private void AttendanceRow_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.DataContext is not AttendanceRowItem { Row: { } row }) return;
+        if ((sender as FrameworkElement)?.Tag is not AttendanceRowItem { Row: { } row }) return;
         if (row.Kind == AttendanceRowKind.Period && row.Period is { } period) Model.EditPeriod(period);
         else if (row.Before is { } before && row.After is { } after) Model.EditGap(before, after);
     }
@@ -482,14 +483,22 @@ public sealed partial class PanelView : UserControl, INotifyPropertyChanged
         return items;
     }
 
+    /// <summary>Für die Bildschirmfotos: klickt den ersten Eintrag an, auf demselben Weg wie die Maus.</summary>
+    public void ClickFirstEntry()
+    {
+        var index = EntryItems.ToList().FindIndex(item => !item.IsHeader);
+        if (index >= 0 && EntryList.TryGetElement(index) is Panel row && row.Children.OfType<Button>().FirstOrDefault() is { } button)
+            new ButtonAutomationPeer(button).Invoke();
+    }
+
     private void EntryRow_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.DataContext is EntryRowItem { Entry: { } entry }) Model.BeginEditing(entry);
+        if ((sender as FrameworkElement)?.Tag is EntryRowItem { Entry: { } entry }) Model.BeginEditing(entry);
     }
 
     private async void ResumeEntry_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.DataContext is EntryRowItem { Entry: { } entry }) await Model.StartTimerLikeAsync(entry);
+        if ((sender as FrameworkElement)?.Tag is EntryRowItem { Entry: { } entry }) await Model.StartTimerLikeAsync(entry);
     }
 
     private void EntryRow_PointerEntered(object sender, PointerRoutedEventArgs e) => SetResumeOpacity(sender, 1);
@@ -504,7 +513,7 @@ public sealed partial class PanelView : UserControl, INotifyPropertyChanged
     /// <summary>Rechtsklick auf einen Eintrag: Ändern, Erneut starten, Beschreibung kopieren, Löschen.</summary>
     private void EntryMenu_Opening(object? sender, object e)
     {
-        if (sender is not MenuFlyout menu || menu.Target?.DataContext is not EntryRowItem { Entry: { } entry }) return;
+        if (sender is not MenuFlyout menu || menu.Target?.Tag is not EntryRowItem { Entry: { } entry }) return;
         menu.Items.Clear();
         var edit = new MenuFlyoutItem { Text = Loc.T("Ändern") };
         edit.Click += (_, _) => Model.BeginEditing(entry);
@@ -844,7 +853,7 @@ public sealed partial class PanelView : UserControl, INotifyPropertyChanged
 
     private void PickProject_Click(object sender, RoutedEventArgs e)
     {
-        if ((sender as FrameworkElement)?.DataContext is PickerItem { Project: { } project }) Pick(project);
+        if ((sender as FrameworkElement)?.Tag is PickerItem { Project: { } project }) Pick(project);
     }
 
     private void Pick(Project project)

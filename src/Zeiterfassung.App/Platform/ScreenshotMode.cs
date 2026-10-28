@@ -109,8 +109,9 @@ public static class ScreenshotMode
         log($"Tooltip mit Timer: {model.TrayContent.ToolTip.Replace('\n', '|')}");
         await Capture(window, folder, "04-timer", log);
 
-        // Eintrag bearbeiten
-        model.BeginEditing(model.Entries[0]);
+        // Eintrag bearbeiten, angeklickt wie mit der Maus: So fällt beim Bauen auf, wenn ein Klick seinen Eintrag nicht findet.
+        window.PanelView.ClickFirstEntry();
+        if (model.EditingEntry is null) throw new InvalidOperationException("Der Klick auf den ersten Eintrag öffnet ihn nicht.");
         await Capture(window, folder, "05-bearbeiten", log);
         model.CancelEditing();
 

@@ -14,6 +14,8 @@
     xmlns:controls="using:Microsoft.UI.Xaml.Controls">
 
     <UserControl.Resources>
+        <!-- Die Listen sind ItemsRepeater; die setzen bei x:Bind keinen DataContext. Wer klickt, findet seinen Eintrag deshalb über Tag. -->
+
         <!-- Einträge: Zwischenüberschrift einer Firma oder ein Eintrag -->
         <DataTemplate x:Key="EntryHeaderTemplate" x:DataType="views:EntryRowItem">
             <Grid Padding="12,6,38,4" Background="{ThemeResource SubtleFillColorTertiaryBrush}"
@@ -37,7 +39,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Button Style="{StaticResource RowButtonStyle}" Padding="12,8,4,8" Click="EntryRow_Click"
+                <Button Style="{StaticResource RowButtonStyle}" Padding="12,8,4,8" Click="EntryRow_Click" Tag="{x:Bind}"
                         AutomationProperties.Name="{x:Bind AccessibilityText}" ToolTipService.ToolTip="{x:Bind ToolTipText}">
                     <Button.ContextFlyout>
                         <MenuFlyout Opening="EntryMenu_Opening" />
@@ -61,7 +63,7 @@
                     </Grid>
                 </Button>
                 <Button x:Name="ResumeButton" Grid.Column="1" Style="{StaticResource IconButtonStyle}" Width="26" Height="26"
-                        CornerRadius="13" Margin="0,0,8,0" Opacity="0" Click="ResumeEntry_Click" IsTabStop="False"
+                        CornerRadius="13" Margin="0,0,8,0" Opacity="0" Click="ResumeEntry_Click" Tag="{x:Bind}" IsTabStop="False"
                         Visibility="{x:Bind z:Show.If(CanStart)}" ToolTipService.ToolTip="{z:Str Key='Erneut starten'}"
                         AutomationProperties.AccessibilityView="Raw">
                     <FontIcon Glyph="&#xE768;" FontSize="10" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
@@ -75,8 +77,8 @@
 
         <!-- Zeiten des Tages: Anwesenheit, Pause, eingefügte Pause, Felder zum Korrigieren -->
         <DataTemplate x:Key="PeriodTemplate" x:DataType="views:AttendanceRowItem">
-            <Button Style="{StaticResource RowButtonStyle}" Padding="30,7,12,7" Click="AttendanceRow_Click" IsEnabled="{x:Bind CanEdit}"
-                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
+            <Button Style="{StaticResource RowButtonStyle}" Padding="30,7,12,7" Click="AttendanceRow_Click" Tag="{x:Bind}"
+                    IsEnabled="{x:Bind CanEdit}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
                     PointerEntered="AttendanceRow_PointerEntered" PointerExited="AttendanceRow_PointerExited"
                     AutomationProperties.Name="{x:Bind AccessibilityText}">
                 <Grid ColumnSpacing="8">
@@ -116,7 +118,7 @@
                 <TextBlock Grid.Column="1" Text="{x:Bind Duration}" Style="{StaticResource SecondaryCaptionStyle}"
                            VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" />
                 <Button Grid.Column="2" Content="{z:Str Key='Verschieben'}" FontSize="12" Padding="9,2,9,3"
-                        Visibility="{x:Bind z:Show.If(CanEdit)}" Click="AttendanceRow_Click" />
+                        Visibility="{x:Bind z:Show.If(CanEdit)}" Click="AttendanceRow_Click" Tag="{x:Bind}" />
             </Grid>
         </DataTemplate>
 
@@ -194,7 +196,7 @@
 
         <DataTemplate x:Key="PickerOptionTemplate" x:DataType="views:PickerItem">
             <Button Style="{StaticResource SubtleButtonStyle}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                    Padding="4,0,8,0" Height="30" Background="{x:Bind HighlightBrush}" Click="PickProject_Click"
+                    Padding="4,0,8,0" Height="30" Background="{x:Bind HighlightBrush}" Click="PickProject_Click" Tag="{x:Bind}"
                     AutomationProperties.Name="{x:Bind AccessibilityText}">
                 <Grid ColumnSpacing="6">
                     <Grid.ColumnDefinitions>
@@ -496,7 +498,8 @@
                         <Border Style="{StaticResource GroupStyle}" AutomationProperties.Name="{z:Str Key='Einträge'}">
                             <StackPanel>
                                 <ScrollViewer MaxHeight="{x:Bind EntriesMaxHeight, Mode=OneWay}" VerticalScrollBarVisibility="Auto">
-                                    <ItemsRepeater ItemsSource="{x:Bind EntryItems, Mode=OneWay}" ItemTemplate="{StaticResource EntryTemplates}" />
+                                    <ItemsRepeater x:Name="EntryList" ItemsSource="{x:Bind EntryItems, Mode=OneWay}"
+                                                   ItemTemplate="{StaticResource EntryTemplates}" />
                                 </ScrollViewer>
                                 <StackPanel Spacing="4" Padding="16,20,16,18" HorizontalAlignment="Stretch"
                                             BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1"
