@@ -146,7 +146,8 @@ public sealed class AppModelTests
     public void Duration() => MainThread.Run(async () =>
     {
         var model = await Models.SignedIn(new FakeOdoo());
-        Assert.Equal(DurationRounding.Off, model.Preferences.DurationRounding);
+        Assert.Equal(DurationRounding.QuarterHour, model.Preferences.DurationRounding);
+        model.Preferences.DurationRounding = DurationRounding.Off;
         model.DraftDurationText = "1:20";
         Assert.Equal(80, model.DraftMinutes);
         Assert.Null(model.DurationHint);

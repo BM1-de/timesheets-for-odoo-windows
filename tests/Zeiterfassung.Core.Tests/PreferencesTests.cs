@@ -8,18 +8,18 @@ namespace Zeiterfassung.Tests;
 
 /// <summary>
 /// Einstellungen. Nicht übernommen sind die Tests zum Übernehmen der Einstellungen älterer Mac-Versionen und zur Zeit in
-/// der Menüleiste (takesOverSwitch, keepsRoundingOfExistingUsers, menuBarDefaults, menuBarFromRunningTimeSwitch): Die
+/// der Menüleiste (takesOverSwitch, keepsStoredOff, menuBarDefaults, menuBarFromRunningTimeSwitch): Die
 /// Windows-App hat keine älteren Versionen und keine Menüleiste.
 /// </summary>
 public sealed class PreferencesTests
 {
-    // Swift prüft zusätzlich, dass „duration.rounding“ gleich mit 0 gespeichert wird. Das dient nur dem Übernehmen
+    // Swift prüft zusätzlich, dass „duration.rounding“ gleich mit 15 gespeichert wird. Das dient nur dem Übernehmen
     // älterer Versionen (eine spätere Anmeldung soll nichts mehr ändern) und fehlt deshalb hier.
-    [Fact(DisplayName = "neu installiert wird nicht gerundet")]
+    [Fact(DisplayName = "neu installiert wird auf 15 Minuten gerundet")]
     public void RoundingDefault()
     {
         var settings = new MemorySettingsStore();
-        Assert.Equal(DurationRounding.Off, new Preferences(settings).DurationRounding);
+        Assert.Equal(DurationRounding.QuarterHour, new Preferences(settings).DurationRounding);
     }
 
     [Fact(DisplayName = "die Auswahl bleibt gespeichert")]

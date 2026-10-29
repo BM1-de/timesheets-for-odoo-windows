@@ -154,7 +154,7 @@ public sealed class Preferences
         runningTimer = Load<RunningTimer>(Key.RunningTimer);
         durationRounding = ReadInt(Key.DurationRounding) is { } unit && Enum.IsDefined(typeof(DurationRounding), unit)
             ? (DurationRounding)unit
-            : DurationRounding.Off;
+            : DurationRounding.QuarterHour;
         session = Load<OdooSession>(Key.Session);
         cachedCapabilities = Load<Capabilities>(Key.Capabilities);
         loginHints = Load<LoginHints>(Key.LoginHints);

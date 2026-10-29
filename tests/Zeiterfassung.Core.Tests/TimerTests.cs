@@ -131,6 +131,7 @@ public sealed class TimerTests
         odoo.WithLock(() => odoo.Lines = [Fake.Line(1, "2026-10-23", "Plugin-Updates", 2, 21, 0.5)]);
         var clock = new MovingClock();
         var model = await Models.SignedIn(odoo, clock: clock);
+        model.Preferences.DurationRounding = DurationRounding.Off;
         await FillDraft(model);
         await model.StartTimerAsync();
         clock.Advance(10 * 60);
@@ -156,6 +157,7 @@ public sealed class TimerTests
         var odoo = new FakeOdoo();
         var clock = new MovingClock();
         var model = await Models.SignedIn(odoo, clock: clock);
+        model.Preferences.DurationRounding = DurationRounding.Off;
         await FillDraft(model);
         await model.StartTimerAsync();
         clock.Advance(20 * 60);
