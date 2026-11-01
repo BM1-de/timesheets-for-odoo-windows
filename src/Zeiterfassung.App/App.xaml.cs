@@ -95,7 +95,7 @@ public sealed partial class App : Application
         }
 
         var preferences = new Preferences(new WindowsSettingsStore());
-        var http = new DemoRoutingHttpSender(new NetHttpSender(AppInfo.UserAgent));
+        var http = new DemoRoutingHttpSender(new PacedHttpSender(new NetHttpSender(AppInfo.UserAgent)));
         Model = new AppModel(preferences, http, new CredentialSecretStore())
         {
             Post = action => dispatcher.TryEnqueue(() => action()),

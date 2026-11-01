@@ -26,6 +26,8 @@ public enum OdooErrorKind
     AccessDenied,
     /// <summary>Odoo lehnt die Eingabe ab, mit einer Meldung für den Benutzer.</summary>
     Rejected,
+    /// <summary>Odoo meldet auch nach Wartezeiten zu viele Anfragen (HTTP 429).</summary>
+    RateLimited,
     /// <summary>Sonstiger Fehler auf dem Server.</summary>
     Server,
     /// <summary>Antwort ohne erwartetes Format.</summary>
@@ -102,6 +104,7 @@ public sealed class OdooException(OdooErrorKind kind, string detail = "") : Exce
         OdooErrorKind.NotFound => Detail.Length == 0 ? Loc.T("Odoo kennt diese Funktion nicht.") : Detail,
         OdooErrorKind.AccessDenied => Detail.Length == 0 ? Loc.T("Dafür fehlen in Odoo die Rechte.") : Detail,
         OdooErrorKind.Rejected => Detail,
+        OdooErrorKind.RateLimited => Loc.T("Odoo meldet zu viele Anfragen. Bitte gleich noch einmal versuchen."),
         OdooErrorKind.Server => Loc.T("Odoo meldet einen Fehler: %@", Detail),
         OdooErrorKind.UnexpectedResponse => Loc.T("Unerwartete Antwort von Odoo. %@", Detail),
         OdooErrorKind.Redirected => Detail.Length == 0

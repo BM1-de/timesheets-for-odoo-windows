@@ -2,6 +2,8 @@
 
 ## 0.1.0 – unreleased
 
+- Requests go to Odoo one after the other, and the app waits when Odoo reports too many requests
+  (error 429 on Odoo Online).
 - First version for Windows, the counterpart of the macOS menu bar app, built with WinUI 3: time
   entries with project, task, description and duration, the timer, attendance with corrections,
   and several companies work as on the Mac. A clock icon in the notification area of the taskbar

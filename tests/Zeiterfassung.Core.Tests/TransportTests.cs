@@ -238,3 +238,99 @@ public sealed class ConnectorTests
             new Connector(odoo.Client()).ConnectAsync(Url, odoo.ApiKey, null, null));
     }
 }
+
+/// <summary>Zu viele Anfragen</summary>
+public sealed class PacedHttpSenderTests
+{
+    private const string Server = "https://odoo.example.de";
+    private readonly List<TimeSpan> waits = [];
+    private DateTimeOffset clock = new(2026, 11, 1, 8, 0, 0, TimeSpan.Zero);
+
+    private static HttpRequest Request() =>
+        new("POST", new Uri(Server), new Dictionary<string, string>(), null);
+
+    private static HttpReply TooMany(string? retryAfter = null) => new(
+        429,
+        retryAfter is null ? new Dictionary<string, string>() : new Dictionary<string, string> { ["Retry-After"] = retryAfter },
+        []);
+
+    private PacedHttpSender Paced(IHttpSender http) => new(http, () => clock, (delay, _) =>
+    {
+        waits.Add(delay);
+        return Task.CompletedTask;
+    });
+
+    [Fact(DisplayName = "wiederholt nach HTTP 429 und beachtet Retry-After")]
+    public async Task RetriesAfterWaiting()
+    {
+        var isFirst = true;
+        var http = new StubHttpSender(_ =>
+        {
+            if (!isFirst) return StubHttpSender.Json(new JsonArray());
+            isFirst = false;
+            return TooMany("3");
+        });
+        var reply = await Paced(http).SendAsync(Request());
+        Assert.Equal(200, reply.Status);
+        Assert.Equal(2, http.Requests.Count);
+        Assert.Equal([TimeSpan.FromSeconds(3)], waits);
+    }
+
+    [Fact(DisplayName = "gibt nach drei Wiederholungen auf und fragt eine Weile nicht mehr an")]
+    public async Task PausesAfterGivingUp()
+    {
+        var http = new StubHttpSender(_ => TooMany());
+        var paced = Paced(http);
+        await Expect.OdooError(OdooErrorKind.RateLimited, "", () => paced.SendAsync(Request()));
+        Assert.Equal(4, http.Requests.Count);
+        Assert.Equal([TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8)], waits);
+
+        await Expect.OdooError(OdooErrorKind.RateLimited, "", () => paced.SendAsync(Request()));
+        Assert.Equal(4, http.Requests.Count);
+
+        clock += TimeSpan.FromSeconds(31);
+        await Expect.OdooError(OdooErrorKind.RateLimited, "", () => paced.SendAsync(Request()));
+        Assert.Equal(8, http.Requests.Count);
+    }
+
+    [Fact(DisplayName = "wartet nicht, wenn Retry-After zu lang ist")]
+    public async Task LongRetryAfterFailsAtOnce()
+    {
+        var http = new StubHttpSender(_ => TooMany("120"));
+        await Expect.OdooError(OdooErrorKind.RateLimited, "", () => Paced(http).SendAsync(Request()));
+        Assert.Single(http.Requests);
+        Assert.Empty(waits);
+    }
+
+    private sealed class ConcurrencyProbe : IHttpSender
+    {
+        private int active;
+        public int MostAtOnce { get; private set; }
+
+        public async Task<HttpReply> SendAsync(HttpRequest request, CancellationToken cancellationToken = default)
+        {
+            var current = Interlocked.Increment(ref active);
+            lock (this) MostAtOnce = Math.Max(MostAtOnce, current);
+            await Task.Delay(5, cancellationToken);
+            Interlocked.Decrement(ref active);
+            return StubHttpSender.Json(new JsonArray());
+        }
+    }
+
+    [Fact(DisplayName = "schickt gleichzeitige Anfragen nacheinander")]
+    public async Task SendsOneAtATime()
+    {
+        var probe = new ConcurrencyProbe();
+        var paced = new PacedHttpSender(probe);
+        await Task.WhenAll(Enumerable.Range(0, 5).Select(_ => paced.SendAsync(Request())));
+        Assert.Equal(1, probe.MostAtOnce);
+    }
+
+    [Fact(DisplayName = "Anmeldung bei Odoo Online fragt bei HTTP 429 nicht nach dem Benutzernamen")]
+    public async Task ConnectReportsRateLimit()
+    {
+        var http = new StubHttpSender(_ => TooMany());
+        await Expect.OdooError(OdooErrorKind.RateLimited, "", () =>
+            new Connector(Paced(http)).ConnectAsync("https://firma.odoo.com", "geheim", null, null));
+    }
+}

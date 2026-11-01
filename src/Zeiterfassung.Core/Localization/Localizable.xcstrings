@@ -3586,6 +3586,22 @@
         }
       }
     },
+    "Odoo meldet zu viele Anfragen. Bitte gleich noch einmal versuchen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odoo reports too many requests. Please try again in a moment."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odoo signale trop de requêtes. Veuillez réessayer dans un instant."
+          }
+        }
+      }
+    },
     "Odoo-App „Anwesenheiten“ gefunden" : {
       "localizations" : {
         "en" : {

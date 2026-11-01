@@ -103,6 +103,58 @@ public sealed class NetHttpSender : IHttpSender, IDisposable
     public void Dispose() => client.Dispose();
 }
 
+/// <summary>
+/// Schickt Anfragen nacheinander und wartet, wenn Odoo „zu viele Anfragen“ meldet (HTTP 429).
+/// Odoo Online lehnt mehrere gleichzeitige Anfragen schnell ab. Eine mit 429 abgelehnte Anfrage hat
+/// Odoo nicht ausgeführt, die Wiederholung legt also nichts doppelt an. Hilft das Warten nicht, fragt
+/// die App eine Weile gar nicht mehr an, statt die Sperre mit jedem Versuch zu verlängern.
+/// </summary>
+public sealed class PacedHttpSender(
+    IHttpSender network,
+    Func<DateTimeOffset>? now = null,
+    Func<TimeSpan, CancellationToken, Task>? wait = null) : IHttpSender
+{
+    private static readonly TimeSpan[] RetryDelays =
+        [TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8)];
+    /// <summary>Länger wartet eine Anfrage nicht, solange andere hinter ihr anstehen.</summary>
+    private static readonly TimeSpan LongestWait = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan ShortestPause = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan LongestPause = TimeSpan.FromSeconds(300);
+
+    private readonly Func<DateTimeOffset> now = now ?? (() => DateTimeOffset.UtcNow);
+    private readonly Func<TimeSpan, CancellationToken, Task> wait = wait ?? Task.Delay;
+    private readonly SemaphoreSlim gate = new(1, 1);
+    private DateTimeOffset pausedUntil = DateTimeOffset.MinValue;
+
+    public async Task<HttpReply> SendAsync(HttpRequest request, CancellationToken cancellationToken = default)
+    {
+        await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (now() < pausedUntil) throw new OdooException(OdooErrorKind.RateLimited);
+            for (var attempt = 0; ; attempt++)
+            {
+                var reply = await network.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                if (reply.Status != 429) return reply;
+                TimeSpan? retryAfter = int.TryParse(reply.Header("Retry-After"), out var seconds)
+                    ? TimeSpan.FromSeconds(seconds)
+                    : null;
+                if (attempt >= RetryDelays.Length || (retryAfter ?? RetryDelays[attempt]) > LongestWait)
+                {
+                    var pause = TimeSpan.FromTicks(Math.Clamp((retryAfter ?? TimeSpan.Zero).Ticks, ShortestPause.Ticks, LongestPause.Ticks));
+                    pausedUntil = now() + pause;
+                    throw new OdooException(OdooErrorKind.RateLimited);
+                }
+                await wait(retryAfter ?? RetryDelays[attempt], cancellationToken).ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+}
+
 internal static class HttpRequests
 {
     public static HttpRequest PostJson(Uri url, byte[] body, IEnumerable<KeyValuePair<string, string>>? extra = null)
