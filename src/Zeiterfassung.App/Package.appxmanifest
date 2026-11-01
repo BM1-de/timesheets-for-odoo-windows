@@ -15,7 +15,7 @@
   <Identity
     Name="BM1.ZeiterfassungFuerOdoo"
     Publisher="CN=Baumgaertner Marketing GmbH, O=Baumgaertner Marketing GmbH, L=Bayreuth, S=Bayern, C=DE"
-    Version="0.1.0.0" />
+    Version="0.4.2.0" />
 
   <Properties>
     <DisplayName>ms-resource:AppDisplayName</DisplayName>

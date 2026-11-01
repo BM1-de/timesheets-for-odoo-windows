@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 – unreleased
+## 0.4.2 – 2026-11-01
 
 - Requests go to Odoo one after the other, and the app waits when Odoo reports too many requests
   (error 429 on Odoo Online).
