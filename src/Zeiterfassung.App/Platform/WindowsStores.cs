@@ -241,7 +241,8 @@ public static class Autostart
     {
         const string uri = "ms-settings:startupapps";
         if (PackageInfo.IsPackaged) return Windows.System.Launcher.LaunchUriAsync(new Uri(uri)).AsTask();
-        // Ohne Paketidentität bleibt der Weg über die Shell, die die Adresse an die Einstellungen weitergibt.
+        // Ohne Paket geht es über die Shell: Das braucht kein WinRT, das ohne Paketidentität nur eingeschränkt
+        // antwortet, und die Shell gibt ms-settings: genauso an die Einstellungen weiter.
         try
         {
             using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uri) { UseShellExecute = true });

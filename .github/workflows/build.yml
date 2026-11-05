@@ -138,8 +138,10 @@ jobs:
           $root = "$PWD\build\unverpackt"
           $dateien = Get-ChildItem $root -Recurse -File
           Write-Host "$([math]::Round(($dateien | Measure-Object Length -Sum).Sum / 1MB, 1)) MB, $($dateien.Count) Dateien"
-          # Ohne resources.pri neben der Programmdatei findet WinUI seine Bedienelemente nicht (siehe csproj).
-          foreach ($pflicht in 'Zeiterfassung.exe', 'resources.pri', 'Microsoft.UI.Xaml.dll', 'Assets\Tray\infobereich-hell.ico') {
+          # Ohne resources.pri findet WinUI seine Bedienelemente nicht, ohne die Symbole fehlt das Bild im
+          # Infobereich und im Fenstertitel — beides liest die App neben der Programmdatei (siehe csproj).
+          foreach ($pflicht in 'Zeiterfassung.exe', 'resources.pri', 'Microsoft.UI.Xaml.dll',
+                               'Assets\App.ico', 'Assets\Tray\infobereich-hell.ico', 'Assets\Tray\infobereich-dunkel-eingestempelt.ico') {
             if (-not (Test-Path "$root\$pflicht")) { throw "$pflicht fehlt in der unverpackten Fassung" }
           }
 
