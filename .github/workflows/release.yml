@@ -8,6 +8,10 @@
 # Signatur ließe sich dieses Bündel nicht installieren, deshalb fehlt es dann. Von Hand gestartet (Actions › Release ›
 # Run workflow) entstehen nur Artefakte, das Bündel für GitHub dann unsigniert zum Testen.
 #
+# Ohne Azure Artifact Signing springt das Geheimnis SELFSIGN_PFX_BASE64 ein: Dann signiert der Lauf das Bündel mit
+# unserem eigenen Zertifikat und hängt es zusammen mit „Zeiterfassung.cer“ an den Release. Windows installiert so ein
+# Paket erst, wenn der Rechner diesem Zertifikat vertraut – die Release-Notizen sagen, wie das geht.
+#
 # Variablen: STORE_IDENTITY_NAME, STORE_PUBLISHER, STORE_PUBLISHER_DISPLAY_NAME, STORE_PRODUCT_ID (Microsoft Store);
 #            MSIX_PUBLISHER, AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID,
 #            SIGNING_ENDPOINT, SIGNING_ACCOUNT, SIGNING_PROFILE (nur für den Download von GitHub)
@@ -32,7 +36,6 @@ env:
   IS_RELEASE: ${{ github.ref_type == 'tag' }}
   CAN_SIGN: ${{ vars.SIGNING_ACCOUNT != '' }}
   HAS_STORE: ${{ vars.STORE_IDENTITY_NAME != '' }}
-  HAS_GITHUB: ${{ vars.SIGNING_ACCOUNT != '' || github.ref_type != 'tag' }}
 
 jobs:
   setup:
@@ -41,6 +44,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       matrix: ${{ steps.matrix.outputs.matrix }}
+      selfsign: ${{ steps.matrix.outputs.selfsign }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
@@ -67,11 +71,16 @@ jobs:
 
       - name: Pakete festlegen
         id: matrix
+        env:
+          SELFSIGN: ${{ secrets.SELFSIGN_PFX_BASE64 != '' }}
         run: |
+          echo "selfsign=$SELFSIGN" >> "$GITHUB_OUTPUT"
+          HAS_GITHUB=false
+          [[ "$CAN_SIGN" == "true" || "$SELFSIGN" == "true" || "$IS_RELEASE" != "true" ]] && HAS_GITHUB=true
           VARIANTS=()
           [[ "$HAS_GITHUB" == "true" ]] && VARIANTS+=('"github"')
           [[ "$HAS_STORE" == "true" ]] && VARIANTS+=('"store"')
-          [[ ${#VARIANTS[@]} -gt 0 ]] || { echo "::error::Weder Microsoft Store noch Artifact Signing eingerichtet, siehe RELEASE.md"; exit 1; }
+          [[ ${#VARIANTS[@]} -gt 0 ]] || { echo "::error::Weder Microsoft Store noch eine Signatur eingerichtet, siehe RELEASE.md"; exit 1; }
           VARIANTS=$(IFS=,; echo "${VARIANTS[*]}")
           echo "matrix={\"variant\":[$VARIANTS],\"platform\":[\"x64\",\"ARM64\"],\"include\":[{\"platform\":\"x64\",\"rid\":\"win-x64\"},{\"platform\":\"ARM64\",\"rid\":\"win-arm64\"}]}" >> "$GITHUB_OUTPUT"
 
@@ -131,6 +140,8 @@ jobs:
       id-token: write
     env:
       VERSION: ${{ needs.setup.outputs.version }}
+      SELFSIGN: ${{ needs.setup.outputs.selfsign }}
+      HAS_GITHUB: ${{ vars.SIGNING_ACCOUNT != '' || needs.setup.outputs.selfsign == 'true' || github.ref_type != 'tag' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -182,6 +193,27 @@ jobs:
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
 
+      - name: Selbst signieren
+        if: env.CAN_SIGN != 'true' && env.SELFSIGN == 'true' && env.HAS_GITHUB == 'true'
+        shell: pwsh
+        env:
+          PFX_BASE64: ${{ secrets.SELFSIGN_PFX_BASE64 }}
+          PFX_PASSWORD: ${{ secrets.SELFSIGN_PFX_PASSWORD }}
+        run: |
+          # Unser eigenes Zertifikat, ausgestellt auf den Herausgeber aus dem Manifest. Das öffentliche Zertifikat geht
+          # mit an den Release: Ohne es verweigert Windows die Installation.
+          $pfx = Join-Path $env:RUNNER_TEMP 'signatur.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:PFX_BASE64))
+          $password = ConvertTo-SecureString $env:PFX_PASSWORD -AsPlainText -Force
+          $signtool = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin\10.*\x64\signtool.exe' |
+            Sort-Object FullName -Descending | Select-Object -First 1
+          & $signtool.FullName sign /fd SHA256 /f $pfx /p $env:PFX_PASSWORD `
+            /tr http://timestamp.digicert.com /td SHA256 "build/release/Zeiterfassung_$($env:VERSION).msixbundle"
+          if ($LASTEXITCODE) { throw 'Signatur gescheitert' }
+          Export-Certificate -Cert (Get-PfxCertificate -FilePath $pfx -Password $password) `
+            -FilePath build/release/Zeiterfassung.cer | Out-Null
+          Remove-Item $pfx
+
       - name: App-Installer-Datei
         if: env.HAS_GITHUB == 'true'
         shell: pwsh
@@ -214,11 +246,13 @@ jobs:
       contents: write
     env:
       VERSION: ${{ needs.setup.outputs.version }}
+      SELFSIGN: ${{ needs.setup.outputs.selfsign }}
+      HAS_GITHUB: ${{ vars.SIGNING_ACCOUNT != '' || needs.setup.outputs.selfsign == 'true' }}
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/download-artifact@v8
-        if: env.CAN_SIGN == 'true'
+        if: env.HAS_GITHUB == 'true'
         with:
           name: release
           path: build/release
@@ -237,8 +271,12 @@ jobs:
             printf '\n%s\n' "Installieren über den Microsoft Store / Install from the Microsoft Store: https://apps.microsoft.com/detail/$STORE_PRODUCT_ID" >> "$RUNNER_TEMP/notes.md"
           fi
           FILES=()
-          if [[ "$CAN_SIGN" == "true" ]]; then
+          if [[ "$HAS_GITHUB" == "true" ]]; then
             printf '\n%s\n' "Ohne Store „Zeiterfassung.appinstaller“ laden und öffnen; installierte Versionen aktualisieren sich über „Nach Updates suchen …“. / Without the Store, download and open “Zeiterfassung.appinstaller”; installed versions update via “Check for updates…”." >> "$RUNNER_TEMP/notes.md"
             FILES=("build/release/Zeiterfassung_$VERSION.msixbundle" build/release/Zeiterfassung.appinstaller)
+          fi
+          if [[ "$CAN_SIGN" != "true" && "$SELFSIGN" == "true" ]]; then
+            printf '\n%s\n' "Diese Dateien sind mit unserem eigenen Zertifikat signiert, nicht über den Store. Vor der Installation einmalig „Zeiterfassung.cer“ laden und in einer PowerShell als Administrator einrichten: Import-Certificate -FilePath .\\Zeiterfassung.cer -CertStoreLocation Cert:\\LocalMachine\\TrustedPeople / These files are signed with our own certificate instead of the Store. Before installing, download “Zeiterfassung.cer” once and run the command above in an elevated PowerShell." >> "$RUNNER_TEMP/notes.md"
+            FILES+=(build/release/Zeiterfassung.cer)
           fi
           gh release create "$GITHUB_REF_NAME" --title "Zeiterfassung für Odoo $VERSION" --notes-file "$RUNNER_TEMP/notes.md" "${FILES[@]}"

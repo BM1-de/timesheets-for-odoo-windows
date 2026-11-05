@@ -75,6 +75,26 @@ environment can be limited to tags `v*`.
 The publisher is part of the package identity. Once a version is installed anywhere, changing
 `MSIX_PUBLISHER` means existing installations no longer receive updates.
 
+### Fallback: our own certificate
+
+Without Artifact Signing the workflow falls back to a certificate we issued ourselves, so a download
+is possible before the Store entry is live. It signs the same bundle and attaches `Zeiterfassung.cer`
+to the release. Windows refuses such a package until the machine trusts that certificate, so the
+release notes tell users to import it into *Trusted People* of the local machine first, which needs
+administrator rights. This is a stopgap, not a replacement: on managed machines the import is often
+not allowed.
+
+The certificate is issued to the publisher from `Package.appxmanifest`, so `MSIX_PUBLISHER` stays
+empty. Two repository secrets switch the fallback on:
+
+| Name | Content |
+|---|---|
+| `SELFSIGN_PFX_BASE64` | the PFX file, base64 encoded in a single line |
+| `SELFSIGN_PFX_PASSWORD` | its password |
+
+Both belong in Bitwarden as well. The certificate expires on 4 November 2031; because the signature
+carries a timestamp, packages signed before that date stay installable afterwards.
+
 ## Publishing a version
 
 1. **Code on `main`:** all changes merged; `CHANGELOG.md` has a section `## <version> – <date>`.

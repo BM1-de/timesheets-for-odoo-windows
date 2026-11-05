@@ -143,6 +143,18 @@ Sie steht danach im Startmenü, Updates kommen über den Store. *Mit Windows sta
 den Einstellungen der App ein. Texte und Angaben für den Eintrag stehen in
 [docs/store.md](docs/store.md).
 
+**Ohne Store.** Solange der Eintrag im Store fehlt, hängen am
+[letzten Release](https://github.com/BM1-de/timesheets-for-odoo-windows/releases/latest) das Paket
+und das Zertifikat, mit dem wir es signiert haben. Windows installiert ein Paket nur, wenn der
+Rechner dem Zertifikat vertraut: erst `Zeiterfassung.cer` laden und in einer PowerShell als
+Administrator einrichten, dann `Zeiterfassung.appinstaller` öffnen.
+
+```powershell
+Import-Certificate -FilePath .\Zeiterfassung.cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople
+```
+
+Auf verwalteten Firmenrechnern ist dieser Schritt oft gesperrt; dort führt nur der Store zum Ziel.
+
 ## Selbst bauen
 
 Unter Windows mit dem .NET 10 SDK und MSBuild aus Visual Studio 2026 oder den Build Tools. Das MSIX-Paket für
