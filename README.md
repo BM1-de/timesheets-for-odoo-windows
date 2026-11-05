@@ -167,8 +167,17 @@ msbuild src/Zeiterfassung.App/Zeiterfassung.App.csproj /restore /p:Configuration
 Windows installiert das Paket nur signiert. Zum Ausprobieren genügt ein selbst ausgestelltes Zertifikat auf den
 Herausgeber aus `Package.appxmanifest`, dem der Rechner vertraut; so macht es die Prüfung auf GitHub in
 [`.github/workflows/build.yml`](.github/workflows/build.yml). In Visual Studio installiert *Bereitstellen* die App
-direkt. Ohne Paket startet die App nicht: WinUI findet dann seine Ressourcen nicht. Veröffentlicht wird über GitHub
-Actions, siehe [RELEASE.md](RELEASE.md).
+direkt. Veröffentlicht wird über GitHub Actions, siehe [RELEASE.md](RELEASE.md).
+
+Dieselbe App läuft auch **ohne Paket**, als Ordner zum Entpacken, ohne MSIX und ohne Signatur:
+
+```powershell
+dotnet publish src/Zeiterfassung.App/Zeiterfassung.App.csproj -c Release -r win-x64 -p:Platform=x64 -p:WindowsPackageType=None -o build\unverpackt
+```
+
+Entscheidend ist `WindowsPackageType=None`: Dann startet das Windows App SDK ohne Paketidentität, und der Bau legt
+die Ressourcen als `resources.pri` neben die Programmdatei — nur unter diesem Namen findet WinUI die Vorlagen seiner
+Bedienelemente, wenn kein Paket da ist. Was in dieser Fassung anders läuft, steht unten unter *Ohne Paket*.
 
 ## Entwicklung
 
@@ -192,6 +201,29 @@ Actions, siehe [RELEASE.md](RELEASE.md).
   und legt sie als Artefakt `bilder` ab.
 - Symbole: `python3 scripts/make-assets.py` erzeugt Kacheln, App-Symbol und die Symbole für den
   Infobereich aus den SVG-Dateien in `design/symbole` (braucht `rsvg-convert`).
+
+## Ohne Paket
+
+Beide Fassungen kommen aus demselben Code; `PackageInfo.IsPackaged` entscheidet zur Laufzeit. Was ohne Paket anders
+läuft:
+
+| | Im Paket (MSIX) | Ohne Paket (ZIP) |
+|---|---|---|
+| Einstellungen | lokale App-Einstellungen von Windows | `%LOCALAPPDATA%\Zeiterfassung\settings.json` |
+| API-Schlüssel | Anmeldeinformationsverwaltung | dieselbe |
+| Mit Windows starten | Startaufgabe des Pakets | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, Wert `ZeiterfassungFuerOdoo` |
+| Start beim Anmelden erkennen | Aktivierungsart `StartupTask` | Argument `--autostart` am Eintrag im Run-Schlüssel |
+| Updates | sucht selbst über die `.appinstaller`-Datei | aus; neue Versionen holt man von der Release-Seite |
+| Aufruf als `Zeiterfassung` | Ausführungsalias | entfällt; die Programmdatei liegt im entpackten Ordner |
+
+Dass der Autostart auf die Programmdatei zeigt, heißt: Verschiebt man den entpackten Ordner, zeigt der Eintrag ins
+Leere. Beim nächsten Start setzt die App ihn auf den neuen Pfad. Ausschalten kann man ihn in der App oder in den
+Windows-Einstellungen unter *Apps › Autostart*; schaltet Windows ihn dort ab, bleibt er abgeschaltet, bis man ihn
+dort wieder einschaltet.
+
+Updates bleiben aus, weil es ohne Paketidentität keinen Weg über den App Installer gibt. Ein eigener Updater müsste
+die laufende Programmdatei austauschen und die App neu starten — eigene Software für einen Fall, den der erneute
+Download aus dem Release erledigt. Die Einstellungen nennen dafür unter *Über* die Seite des Projekts.
 
 ## Grenzen
 
