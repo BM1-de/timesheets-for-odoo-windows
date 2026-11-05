@@ -146,13 +146,14 @@ public sealed partial class App : Application
     }
 
     /// <summary>
-    /// „Mit Windows starten“ ist bei der Download-Fassung nach dem ersten Start eingeschaltet, im Paket wie
-    /// unverpackt. Danach entscheidet nur der Benutzer. Aus dem Microsoft Store bleibt es aus, bis man es in den
-    /// Einstellungen einschaltet.
+    /// „Mit Windows starten“ ist bei der Download-Fassung als Paket nach dem ersten Start eingeschaltet; dort hat der
+    /// Benutzer die App bewusst installiert. Danach entscheidet nur er. Aus dem Microsoft Store bleibt es aus, bis man
+    /// es in den Einstellungen einschaltet — und ohne Paket ebenso: Ein entpacktes ZIP, das jemand nur ausprobiert,
+    /// soll nichts am System ändern, von dem er nichts weiß.
     /// </summary>
     private async Task ApplyAutostartDefaultAsync()
     {
-        if (AppInfo.IsStore || Model.Preferences.AutostartDefaultApplied) return;
+        if (AppInfo.IsStore || !PackageInfo.IsPackaged || Model.Preferences.AutostartDefaultApplied) return;
         Model.Preferences.AutostartDefaultApplied = true;
         try
         {

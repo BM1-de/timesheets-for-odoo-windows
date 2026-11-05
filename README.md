@@ -211,7 +211,7 @@ läuft:
 |---|---|---|
 | Einstellungen | lokale App-Einstellungen von Windows | `%LOCALAPPDATA%\Zeiterfassung\settings.json` |
 | API-Schlüssel | Anmeldeinformationsverwaltung | dieselbe |
-| Mit Windows starten | Startaufgabe des Pakets | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, Wert `ZeiterfassungFuerOdoo` |
+| Mit Windows starten | Startaufgabe des Pakets, nach dem ersten Start an | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, Wert `ZeiterfassungFuerOdoo`; aus, bis man ihn einschaltet |
 | Start beim Anmelden erkennen | Aktivierungsart `StartupTask` | Argument `--autostart` am Eintrag im Run-Schlüssel |
 | Updates | sucht selbst über die `.appinstaller`-Datei | aus; neue Versionen holt man von der Release-Seite |
 | Aufruf als `Zeiterfassung` | Ausführungsalias | entfällt; die Programmdatei liegt im entpackten Ordner |
@@ -221,8 +221,12 @@ Die eigenen Texte der App stehen in jeder Fassung in der gewählten Sprache; nur
 mitbringt — etwa *Ein* und *Aus* am Schalter — richten sich ohne Paket nach Windows. Das fällt nur auf, wenn
 beide Sprachen auseinandergehen, denn `PrimaryLanguageOverride` gibt es nur mit Paketidentität.
 
-Dass der Autostart auf die Programmdatei zeigt, heißt: Verschiebt man den entpackten Ordner, zeigt der Eintrag ins
-Leere. Beim nächsten Start setzt die App ihn auf den neuen Pfad. Ausschalten kann man ihn in der App oder in den
+Den Autostart schaltet die unverpackte Fassung **nicht** von selbst ein: Ein entpackter Ordner, den jemand nur
+ausprobiert, soll nichts am System ändern, von dem er nichts weiß. Die Fassung aus dem Paket darf das, dort hat man
+die App bewusst installiert.
+
+Dass der Eintrag auf die Programmdatei zeigt, heißt: Verschiebt man den entpackten Ordner, zeigt er ins Leere. Beim
+nächsten Start setzt die App ihn auf den neuen Pfad. Ausschalten kann man ihn in der App oder in den
 Windows-Einstellungen unter *Apps › Autostart*; schaltet Windows ihn dort ab, bleibt er abgeschaltet, bis man ihn
 dort wieder einschaltet.
 
