@@ -107,3 +107,115 @@ jobs:
           name: msix-x64
           path: build/msix
           if-no-files-found: ignore
+
+  unverpackt:
+    name: Unverpackte Fassung (${{ matrix.plattform }})
+    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - plattform: x64
+            kennung: win-x64
+          - plattform: ARM64
+            kennung: win-arm64
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Veröffentlichen
+        shell: pwsh
+        run: >
+          dotnet publish src/Zeiterfassung.App/Zeiterfassung.App.csproj -v minimal
+          -c Release -r ${{ matrix.kennung }} -p:Platform=${{ matrix.plattform }}
+          -p:WindowsPackageType=None -o "$PWD\build\unverpackt"
+
+      - name: Vollständigkeit
+        shell: pwsh
+        run: |
+          $root = "$PWD\build\unverpackt"
+          $dateien = Get-ChildItem $root -Recurse -File
+          Write-Host "$([math]::Round(($dateien | Measure-Object Length -Sum).Sum / 1MB, 1)) MB, $($dateien.Count) Dateien"
+          # Ohne resources.pri neben der Programmdatei findet WinUI seine Bedienelemente nicht (siehe csproj).
+          foreach ($pflicht in 'Zeiterfassung.exe', 'resources.pri', 'Microsoft.UI.Xaml.dll', 'Assets\Tray\infobereich-hell.ico') {
+            if (-not (Test-Path "$root\$pflicht")) { throw "$pflicht fehlt in der unverpackten Fassung" }
+          }
+
+      # Der Bildschirmfoto-Durchlauf geht durch alle wichtigen Ansichten; läuft er bis „Fertig“, hat WinUI seine
+      # Ressourcen gefunden. Nur auf x64, denn ARM64 läuft auf diesem Rechner nicht.
+      - name: Bildschirmfotos
+        if: matrix.plattform == 'x64'
+        shell: pwsh
+        run: |
+          $root = "$PWD\build\unverpackt"
+          $folder = "$PWD\build\bilder-unverpackt"
+          New-Item -ItemType Directory -Force $folder | Out-Null
+          Set-DisplayResolution -Width 1920 -Height 1200 -Force -ErrorAction Continue
+          Start-Process -FilePath "$root\Zeiterfassung.exe" -ArgumentList '--screenshots', $folder, '--language', 'de', '--theme', 'light'
+          $deadline = (Get-Date).AddSeconds(240)
+          $gone = 0
+          while ((Get-Date) -lt $deadline -and $gone -lt 3) {
+            Start-Sleep -Seconds 2
+            if (Select-String -Path "$folder\protokoll.txt" -Pattern '^(Fertig|Abbruch)' -Quiet -ErrorAction SilentlyContinue) { break }
+            if (Get-Process Zeiterfassung -ErrorAction SilentlyContinue) { $gone = 0 } else { $gone++ }
+          }
+          Start-Sleep -Seconds 5
+          if (Get-Process Zeiterfassung -ErrorAction SilentlyContinue) { Write-Warning 'App läuft noch'; Get-Process Zeiterfassung | Stop-Process -Force }
+          Get-ChildItem $folder | Format-Table Name, Length
+          foreach ($file in "$folder\protokoll.txt", "$folder\fehler.log") {
+            if (Test-Path $file) { Write-Host "--- $file"; Get-Content $file }
+          }
+          if (-not (Select-String -Path "$folder\protokoll.txt" -Pattern '^Fertig$' -Quiet -ErrorAction SilentlyContinue)) { exit 1 }
+
+      # Der Bildschirmfoto-Modus lässt Infobereich, Fenster und Autostart aus; dieser Start nimmt den normalen Weg.
+      - name: Normaler Start
+        if: matrix.plattform == 'x64'
+        shell: pwsh
+        run: |
+          $root = "$PWD\build\unverpackt"
+          $daten = "$env:LOCALAPPDATA\Zeiterfassung"
+          Remove-Item $daten -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name ZeiterfassungFuerOdoo -ErrorAction SilentlyContinue
+          Start-Process -FilePath "$root\Zeiterfassung.exe"
+          Start-Sleep -Seconds 30
+          $lebt = [bool](Get-Process Zeiterfassung -ErrorAction SilentlyContinue)
+          Write-Host "Läuft: $lebt"
+          if (Test-Path "$daten\fehler.log") { Write-Host '--- fehler.log'; Get-Content "$daten\fehler.log" }
+          if (Test-Path "$daten\settings.json") { Write-Host '--- settings.json'; Get-Content "$daten\settings.json" }
+          # „Mit Windows starten“ schaltet die Download-Fassung beim ersten Start ein: ohne Paket über den Run-Schlüssel.
+          $eintrag = (Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name ZeiterfassungFuerOdoo -ErrorAction SilentlyContinue).ZeiterfassungFuerOdoo
+          Write-Host "Autostart-Eintrag: $eintrag"
+          if (Get-Process Zeiterfassung -ErrorAction SilentlyContinue) { Get-Process Zeiterfassung | Stop-Process -Force }
+          Remove-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name ZeiterfassungFuerOdoo -ErrorAction SilentlyContinue
+          Get-WinEvent -LogName Application -MaxEvents 20 -ErrorAction SilentlyContinue |
+            Where-Object { $_.ProviderName -in '.NET Runtime', 'Application Error', 'Windows Error Reporting' } |
+            Format-List TimeCreated, ProviderName, Message
+          if (-not $lebt) { throw 'Die App lief nach dem Start nicht mehr' }
+          if ($eintrag -ne "`"$root\Zeiterfassung.exe`" --autostart") { throw "Autostart-Eintrag passt nicht: $eintrag" }
+          if (Test-Path "$daten\fehler.log") { throw 'Die App hat Fehler protokolliert' }
+
+      - name: Archiv
+        shell: pwsh
+        run: |
+          $version = ([xml](Get-Content -Raw src/Zeiterfassung.App/Package.appxmanifest)).Package.Identity.Version
+          $kurz = ($version -split '\.')[0..2] -join '.'
+          $ziel = "$PWD\build\zip\Zeiterfassung-$kurz-${{ matrix.plattform }}.zip"
+          New-Item -ItemType Directory -Force "$PWD\build\zip" | Out-Null
+          Compress-Archive -Path "$PWD\build\unverpackt\*" -DestinationPath $ziel -CompressionLevel Optimal
+          Write-Host "$(Split-Path $ziel -Leaf): $([math]::Round((Get-Item $ziel).Length / 1MB, 1)) MB"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: unverpackt-${{ matrix.plattform }}
+          path: build/zip
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v7
+        if: always() && matrix.plattform == 'x64'
+        with:
+          name: bilder-unverpackt
+          path: build/bilder-unverpackt
+          if-no-files-found: ignore
