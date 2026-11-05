@@ -138,11 +138,22 @@ jobs:
           $root = "$PWD\build\unverpackt"
           $dateien = Get-ChildItem $root -Recurse -File
           Write-Host "$([math]::Round(($dateien | Measure-Object Length -Sum).Sum / 1MB, 1)) MB, $($dateien.Count) Dateien"
-          # Ohne resources.pri findet WinUI seine Bedienelemente nicht, ohne die Symbole fehlt das Bild im
-          # Infobereich und im Fenstertitel — beides liest die App neben der Programmdatei (siehe csproj).
+          # Ohne resources.pri findet WinUI seine Bedienelemente nicht, ohne die Symbole bleibt der Infobereich
+          # und der Fenstertitel ohne Bild — beides liest die App neben der Programmdatei (siehe csproj).
           foreach ($pflicht in 'Zeiterfassung.exe', 'resources.pri', 'Microsoft.UI.Xaml.dll',
                                'Assets\App.ico', 'Assets\Tray\infobereich-hell.ico', 'Assets\Tray\infobereich-dunkel-eingestempelt.ico') {
             if (-not (Test-Path "$root\$pflicht")) { throw "$pflicht fehlt in der unverpackten Fassung" }
+          }
+          # Ein Bild aus ms-appx:///, das ohne Paket nicht danebenliegt, lässt seine Stelle im Fenster einfach leer,
+          # ohne Fehler und ohne dass es auf einem Bildschirmfoto auffällt. Darum hier gegen das XAML geprüft.
+          $bilder = Select-String -Path src\Zeiterfassung.App\*.xaml, src\Zeiterfassung.App\Views\*.xaml `
+                                  -Pattern 'ms-appx:///([^"'']+)' -AllMatches |
+            ForEach-Object { $_.Matches } | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+          Write-Host "Bilder aus dem XAML: $($bilder -join ', ')"
+          foreach ($bild in $bilder) {
+            if (-not (Test-Path (Join-Path $root ($bild -replace '/', '\')))) {
+              throw "$bild steht im XAML, fehlt aber in der unverpackten Fassung"
+            }
           }
 
       # Der Bildschirmfoto-Durchlauf geht durch alle wichtigen Ansichten; läuft er bis „Fertig“, hat WinUI seine

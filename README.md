@@ -215,6 +215,11 @@ läuft:
 | Start beim Anmelden erkennen | Aktivierungsart `StartupTask` | Argument `--autostart` am Eintrag im Run-Schlüssel |
 | Updates | sucht selbst über die `.appinstaller`-Datei | aus; neue Versionen holt man von der Release-Seite |
 | Aufruf als `Zeiterfassung` | Ausführungsalias | entfällt; die Programmdatei liegt im entpackten Ordner |
+| Eingebaute Texte von WinUI | folgen der Sprache der App | folgen der Anzeigesprache von Windows |
+
+Die eigenen Texte der App stehen in jeder Fassung in der gewählten Sprache; nur die wenigen, die WinUI selbst
+mitbringt — etwa *Ein* und *Aus* am Schalter — richten sich ohne Paket nach Windows. Das fällt nur auf, wenn
+beide Sprachen auseinandergehen, denn `PrimaryLanguageOverride` gibt es nur mit Paketidentität.
 
 Dass der Autostart auf die Programmdatei zeigt, heißt: Verschiebt man den entpackten Ordner, zeigt der Eintrag ins
 Leere. Beim nächsten Start setzt die App ihn auf den neuen Pfad. Ausschalten kann man ihn in der App oder in den

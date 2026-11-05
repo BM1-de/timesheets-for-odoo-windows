@@ -38,12 +38,12 @@
     <ProjectPriFileName>resources.pri</ProjectPriFileName>
   </PropertyGroup>
 
-  <!-- Die Symbole für den Infobereich und für die Fenstertitel liest die App zur Laufzeit als Datei aus dem Ordner
-       neben der Programmdatei. Beim MSIX-Bau landen Content-Dateien nur im Paket, nicht im Ausgabeordner; ohne Paket
-       müssen sie daneben liegen. Die Kacheln und Store-Logos bleiben draußen, die braucht nur das Paket. -->
+  <!-- Beim MSIX-Bau landen Content-Dateien nur im Paket, nicht im Ausgabeordner. Ohne Paket müssen sie neben der
+       Programmdatei liegen: Die Symbole für den Infobereich und die Fenstertitel liest die App als Datei, und
+       ms-appx:///Assets/… im XAML sucht ohne Paket ebenfalls dort — sonst bleibt die Stelle im Fenster einfach leer,
+       ohne Fehlermeldung. Alles zusammen sind 260 kB, darum der ganze Ordner statt einer Liste, die veraltet. -->
   <ItemGroup Condition="'$(WindowsPackageType)' == 'None'">
-    <Content Update="Assets\App.ico" CopyToOutputDirectory="PreserveNewest" />
-    <Content Update="Assets\Tray\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Update="Assets\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
