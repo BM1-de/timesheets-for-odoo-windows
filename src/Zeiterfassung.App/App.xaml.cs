@@ -115,11 +115,11 @@ public sealed partial class App : Application
         AppInstance.GetCurrent().Activated += (_, activation) => dispatcher.TryEnqueue(() => OnActivated(activation));
 
         await Model.StartAsync();
+        Autostart.RepairIfMoved();
         await ApplyAutostartDefaultAsync();
 
         // Aus dem Autostart beim Anmelden bei Windows bleibt das Fenster zu; sonst geht es auf, auch zur Anmeldung.
-        var launch = AppInstance.GetCurrent().GetActivatedEventArgs();
-        if (launch.Kind != ExtendedActivationKind.StartupTask || Model.Screen == Screen.Login) ShowFlyout();
+        if (!StartedAtLogin() || Model.Screen == Screen.Login) ShowFlyout();
 
         hourly = dispatcher.CreateTimer();
         hourly.Interval = TimeSpan.FromHours(1);
@@ -136,12 +136,23 @@ public sealed partial class App : Application
     }
 
     /// <summary>
-    /// „Mit Windows starten“ ist bei der Download-Fassung nach dem ersten Start eingeschaltet. Danach entscheidet nur der
-    /// Benutzer. Aus dem Microsoft Store bleibt es aus, bis man es in den Einstellungen einschaltet.
+    /// Hat Windows die App beim Anmelden gestartet? Im Paket sagt es die Aktivierungsart, ohne Paket das Argument am
+    /// Eintrag im Run-Schlüssel.
+    /// </summary>
+    private bool StartedAtLogin()
+    {
+        if (!PackageInfo.IsPackaged) return arguments.Contains(Autostart.LoginArgument);
+        return AppInstance.GetCurrent().GetActivatedEventArgs().Kind == ExtendedActivationKind.StartupTask;
+    }
+
+    /// <summary>
+    /// „Mit Windows starten“ ist bei der Download-Fassung nach dem ersten Start eingeschaltet, im Paket wie
+    /// unverpackt. Danach entscheidet nur der Benutzer. Aus dem Microsoft Store bleibt es aus, bis man es in den
+    /// Einstellungen einschaltet.
     /// </summary>
     private async Task ApplyAutostartDefaultAsync()
     {
-        if (AppInfo.IsStore || !PackageInfo.IsPackaged || Model.Preferences.AutostartDefaultApplied) return;
+        if (AppInfo.IsStore || Model.Preferences.AutostartDefaultApplied) return;
         Model.Preferences.AutostartDefaultApplied = true;
         try
         {

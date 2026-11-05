@@ -183,18 +183,27 @@ public enum AutostartState
     DisabledByUser,
     /// <summary>Von der Organisation vorgegeben.</summary>
     ByPolicy,
-    /// <summary>Ohne Paket gibt es keine Startaufgabe.</summary>
+    /// <summary>Weder Startaufgabe noch Eintrag in der Registrierung.</summary>
     Unavailable,
 }
 
-/// <summary>„Mit Windows starten“ über die Startaufgabe des Pakets.</summary>
+/// <summary>
+/// „Mit Windows starten“: im Paket über die Startaufgabe von Windows, ohne Paket über den Run-Schlüssel der
+/// Registrierung. Beide Wege liegen hinter derselben Schnittstelle, die Oberfläche unterscheidet sie nicht.
+/// </summary>
 public static class Autostart
 {
     private const string TaskId = "ZeiterfassungAutostart";
 
+    /// <summary>
+    /// Hängt am Eintrag in der Registrierung. Daran erkennt die App, dass Windows sie beim Anmelden gestartet hat:
+    /// Ohne Paket gibt es keine Startaufgabe, deren Aktivierungsart das verriete.
+    /// </summary>
+    public const string LoginArgument = "--autostart";
+
     public static async Task<AutostartState> StateAsync()
     {
-        if (!PackageInfo.IsPackaged) return AutostartState.Unavailable;
+        if (!PackageInfo.IsPackaged) return RunKey.State();
         var task = await Windows.ApplicationModel.StartupTask.GetAsync(TaskId);
         return Map(task.State);
     }
@@ -202,11 +211,20 @@ public static class Autostart
     /// <summary>Einschalten geht nur, solange der Benutzer es nicht in Windows ausgeschaltet hat.</summary>
     public static async Task<AutostartState> SetEnabledAsync(bool enabled)
     {
-        if (!PackageInfo.IsPackaged) return AutostartState.Unavailable;
+        if (!PackageInfo.IsPackaged) return RunKey.SetEnabled(enabled);
         var task = await Windows.ApplicationModel.StartupTask.GetAsync(TaskId);
         if (enabled) return Map(await task.RequestEnableAsync());
         task.Disable();
         return Map(task.State);
+    }
+
+    /// <summary>
+    /// Ohne Paket zeigt der Eintrag auf die Programmdatei. Verschiebt der Benutzer den Ordner der entpackten
+    /// Fassung, zeigt er ins Leere; dann wird er beim Start auf den neuen Pfad gesetzt.
+    /// </summary>
+    public static void RepairIfMoved()
+    {
+        if (!PackageInfo.IsPackaged) RunKey.RepairIfMoved();
     }
 
     private static AutostartState Map(Windows.ApplicationModel.StartupTaskState state) => state switch
@@ -219,6 +237,108 @@ public static class Autostart
     };
 
     /// <summary>Öffnet Einstellungen › Apps › Autostart.</summary>
-    public static Task OpenSettingsAsync() =>
-        Windows.System.Launcher.LaunchUriAsync(new Uri("ms-settings:startupapps")).AsTask();
+    public static Task OpenSettingsAsync()
+    {
+        const string uri = "ms-settings:startupapps";
+        if (PackageInfo.IsPackaged) return Windows.System.Launcher.LaunchUriAsync(new Uri(uri)).AsTask();
+        // Ohne Paketidentität bleibt der Weg über die Shell, die die Adresse an die Einstellungen weitergibt.
+        try
+        {
+            using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uri) { UseShellExecute = true });
+        }
+        catch (Exception error) when (error is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            ErrorLog.Write(error, "Autostart-Einstellungen");
+        }
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// Der Eintrag unter <c>HKCU\Software\Microsoft\Windows\CurrentVersion\Run</c>: Windows startet die Programmdatei
+/// beim Anmelden. Ausschalten kann der Benutzer das auch in den Windows-Einstellungen unter Apps › Autostart; Windows
+/// merkt sich das daneben unter <c>Explorer\StartupApproved\Run</c> und lässt den Run-Eintrag dabei stehen.
+/// </summary>
+internal static class RunKey
+{
+    private const string RunPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
+    private const string ApprovedPath = @"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
+    private const string ValueName = "ZeiterfassungFuerOdoo";
+
+    /// <summary>Der Aufruf, den Windows beim Anmelden startet.</summary>
+    private static string? Command =>
+        Environment.ProcessPath is { Length: > 0 } path ? $"\"{path}\" {Autostart.LoginArgument}" : null;
+
+    public static AutostartState State()
+    {
+        try
+        {
+            if (Command is null) return AutostartState.Unavailable;
+            using var run = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(RunPath);
+            if (run?.GetValue(ValueName) is not string) return AutostartState.Disabled;
+            return IsApproved() ? AutostartState.Enabled : AutostartState.DisabledByUser;
+        }
+        catch (Exception error) when (IsRegistryError(error))
+        {
+            return AutostartState.Unavailable;
+        }
+    }
+
+    public static AutostartState SetEnabled(bool enabled)
+    {
+        try
+        {
+            if (!enabled)
+            {
+                using var run = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(RunPath, writable: true);
+                run?.DeleteValue(ValueName, throwOnMissingValue: false);
+                // Der Vermerk von Windows gilt nur für vorhandene Einträge; bliebe er stehen, wäre ein späteres
+                // Einschalten in der App sofort wieder „in Windows ausgeschaltet“.
+                using var approved = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(ApprovedPath, writable: true);
+                approved?.DeleteValue(ValueName, throwOnMissingValue: false);
+                return AutostartState.Disabled;
+            }
+            if (Command is not { } command) return AutostartState.Unavailable;
+            if (!IsApproved()) return AutostartState.DisabledByUser;
+            using var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(RunPath, writable: true);
+            if (key is null) return AutostartState.Unavailable;
+            key.SetValue(ValueName, command, Microsoft.Win32.RegistryValueKind.String);
+            return AutostartState.Enabled;
+        }
+        catch (Exception error) when (IsRegistryError(error))
+        {
+            ErrorLog.Write(error, "Autostart");
+            return AutostartState.Unavailable;
+        }
+    }
+
+    /// <summary>Steht im Eintrag ein anderer Pfad, wird er auf die laufende Programmdatei gesetzt.</summary>
+    public static void RepairIfMoved()
+    {
+        try
+        {
+            if (Command is not { } command) return;
+            using var run = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(RunPath, writable: true);
+            if (run?.GetValue(ValueName) is not string current || current == command) return;
+            run.SetValue(ValueName, command, Microsoft.Win32.RegistryValueKind.String);
+        }
+        catch (Exception error) when (IsRegistryError(error))
+        {
+            ErrorLog.Write(error, "Autostart");
+        }
+    }
+
+    /// <summary>
+    /// Windows legt hier für jeden Autostart-Eintrag zwölf Bytes ab; im ersten steht, ob er eingeschaltet ist:
+    /// gerade Werte (2, 6) ja, ungerade (3, 7) nein. Microsoft beschreibt das Format nicht. Fehlt der Wert, gilt der
+    /// Eintrag als eingeschaltet — so sieht es auch nach einem frisch geschriebenen Run-Eintrag aus.
+    /// </summary>
+    private static bool IsApproved()
+    {
+        using var approved = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(ApprovedPath);
+        return approved?.GetValue(ValueName) is not byte[] { Length: > 0 } flags || flags[0] % 2 == 0;
+    }
+
+    private static bool IsRegistryError(Exception error) =>
+        error is System.Security.SecurityException or UnauthorizedAccessException or IOException;
 }
