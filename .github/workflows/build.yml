@@ -214,6 +214,9 @@ jobs:
           # 2. Mit einem Eintrag, der ins Leere zeigt — etwa weil jemand den entpackten Ordner verschoben hat.
           #    Die App setzt ihn beim Start auf die laufende Programmdatei; daran hängt auch, dass Pfad und
           #    Argument im Eintrag stimmen.
+          #    Auf einem frischen Windows gibt es den Schlüssel noch gar nicht; die App legt ihn beim Einschalten
+          #    selbst an, hier muss er von Hand her.
+          New-Item -Path $run -Force | Out-Null
           Set-ItemProperty $run -Name ZeiterfassungFuerOdoo -Value '"C:\Irgendwo\Alt\Zeiterfassung.exe" --autostart'
           $lebtWieder = Starten 30
           $repariert = (Get-ItemProperty $run -Name ZeiterfassungFuerOdoo -ErrorAction SilentlyContinue).ZeiterfassungFuerOdoo
