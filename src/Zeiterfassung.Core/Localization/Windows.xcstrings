@@ -597,6 +597,22 @@
         }
       }
     },
+    "Neue Versionen gibt es auf der Seite des Projekts auf GitHub.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New versions are available on the project page on GitHub."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les nouvelles versions sont disponibles sur la page du projet sur GitHub."
+          }
+        }
+      }
+    },
     "Nächster Tag (Alt+→)": {
       "localizations": {
         "en": {

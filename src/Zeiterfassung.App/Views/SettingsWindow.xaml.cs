@@ -263,5 +263,19 @@ public sealed partial class SettingsWindow : Window, INotifyPropertyChanged
 
     public string VersionText => AppInfo.IsStore ? Loc.T("%@ aus dem Microsoft Store", AppInfo.Version) : AppInfo.Version;
 
-    public string AboutFooter => (AppInfo.IsStore ? Loc.T("Updates kommen über den Microsoft Store.") + " " : "") + AppInfo.LegalNotice;
+    /// <summary>
+    /// Woher Updates kommen, steht nur dort, wo die App sie nicht selbst holt: aus dem Store über den Store, bei der
+    /// unverpackten Fassung von der Seite des Projekts. Die Download-Fassung im Paket sucht selbst, dort gibt es den
+    /// Abschnitt „Updates“.
+    /// </summary>
+    public string AboutFooter
+    {
+        get
+        {
+            var source = AppInfo.IsStore ? Loc.T("Updates kommen über den Microsoft Store.")
+                : Updates.IsSupported ? null
+                : Loc.T("Neue Versionen gibt es auf der Seite des Projekts auf GitHub.");
+            return source is null ? AppInfo.LegalNotice : source + " " + AppInfo.LegalNotice;
+        }
+    }
 }
