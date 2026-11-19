@@ -107,3 +107,153 @@ jobs:
           name: msix-x64
           path: build/msix
           if-no-files-found: ignore
+
+  unverpackt:
+    name: Unverpackte Fassung (${{ matrix.plattform }})
+    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - plattform: x64
+            kennung: win-x64
+          - plattform: ARM64
+            kennung: win-arm64
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Veröffentlichen
+        shell: pwsh
+        run: >
+          dotnet publish src/Zeiterfassung.App/Zeiterfassung.App.csproj -v minimal
+          -c Release -r ${{ matrix.kennung }} -p:Platform=${{ matrix.plattform }}
+          -p:WindowsPackageType=None -o "$PWD\build\unverpackt"
+
+      - name: Vollständigkeit
+        shell: pwsh
+        run: |
+          $root = "$PWD\build\unverpackt"
+          $dateien = Get-ChildItem $root -Recurse -File
+          Write-Host "$([math]::Round(($dateien | Measure-Object Length -Sum).Sum / 1MB, 1)) MB, $($dateien.Count) Dateien"
+          # Ohne resources.pri findet WinUI seine Bedienelemente nicht, ohne die Symbole bleibt der Infobereich
+          # und der Fenstertitel ohne Bild — beides liest die App neben der Programmdatei (siehe csproj).
+          foreach ($pflicht in 'Zeiterfassung.exe', 'resources.pri', 'Microsoft.UI.Xaml.dll',
+                               'Assets\App.ico', 'Assets\Tray\infobereich-hell.ico', 'Assets\Tray\infobereich-dunkel-eingestempelt.ico') {
+            if (-not (Test-Path "$root\$pflicht")) { throw "$pflicht fehlt in der unverpackten Fassung" }
+          }
+          # Ein Bild aus ms-appx:///, das ohne Paket nicht danebenliegt, lässt seine Stelle im Fenster einfach leer,
+          # ohne Fehler und ohne dass es auf einem Bildschirmfoto auffällt. Darum hier gegen das XAML geprüft.
+          $bilder = Select-String -Path src\Zeiterfassung.App\*.xaml, src\Zeiterfassung.App\Views\*.xaml `
+                                  -Pattern 'ms-appx:///([^"'']+)' -AllMatches |
+            ForEach-Object { $_.Matches } | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+          Write-Host "Bilder aus dem XAML: $($bilder -join ', ')"
+          foreach ($bild in $bilder) {
+            if (-not (Test-Path (Join-Path $root ($bild -replace '/', '\')))) {
+              throw "$bild steht im XAML, fehlt aber in der unverpackten Fassung"
+            }
+          }
+
+      # Der Bildschirmfoto-Durchlauf geht durch alle wichtigen Ansichten; läuft er bis „Fertig“, hat WinUI seine
+      # Ressourcen gefunden. Nur auf x64, denn ARM64 läuft auf diesem Rechner nicht.
+      - name: Bildschirmfotos
+        if: matrix.plattform == 'x64'
+        shell: pwsh
+        run: |
+          $root = "$PWD\build\unverpackt"
+          $folder = "$PWD\build\bilder-unverpackt"
+          New-Item -ItemType Directory -Force $folder | Out-Null
+          Set-DisplayResolution -Width 1920 -Height 1200 -Force -ErrorAction Continue
+          Start-Process -FilePath "$root\Zeiterfassung.exe" -ArgumentList '--screenshots', $folder, '--language', 'de', '--theme', 'light'
+          $deadline = (Get-Date).AddSeconds(240)
+          $gone = 0
+          while ((Get-Date) -lt $deadline -and $gone -lt 3) {
+            Start-Sleep -Seconds 2
+            if (Select-String -Path "$folder\protokoll.txt" -Pattern '^(Fertig|Abbruch)' -Quiet -ErrorAction SilentlyContinue) { break }
+            if (Get-Process Zeiterfassung -ErrorAction SilentlyContinue) { $gone = 0 } else { $gone++ }
+          }
+          Start-Sleep -Seconds 5
+          if (Get-Process Zeiterfassung -ErrorAction SilentlyContinue) { Write-Warning 'App läuft noch'; Get-Process Zeiterfassung | Stop-Process -Force }
+          Get-ChildItem $folder | Format-Table Name, Length
+          foreach ($file in "$folder\protokoll.txt", "$folder\fehler.log") {
+            if (Test-Path $file) { Write-Host "--- $file"; Get-Content $file }
+          }
+          if (-not (Select-String -Path "$folder\protokoll.txt" -Pattern '^Fertig$' -Quiet -ErrorAction SilentlyContinue)) { exit 1 }
+
+      # Der Bildschirmfoto-Modus lässt Infobereich, Fenster und Autostart aus; dieser Start nimmt den normalen Weg.
+      # Zwei Durchgänge: erst aus dem Stand, dann mit einem Autostart-Eintrag, der auf einen alten Pfad zeigt.
+      - name: Normaler Start
+        if: matrix.plattform == 'x64'
+        shell: pwsh
+        run: |
+          $root = "$PWD\build\unverpackt"
+          $daten = "$env:LOCALAPPDATA\Zeiterfassung"
+          $run = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+          $erwartet = "`"$root\Zeiterfassung.exe`" --autostart"
+          function Starten($dauer) {
+            Start-Process -FilePath "$root\Zeiterfassung.exe"
+            Start-Sleep -Seconds $dauer
+            $lebt = [bool](Get-Process Zeiterfassung -ErrorAction SilentlyContinue)
+            if ($lebt) { Get-Process Zeiterfassung | Stop-Process -Force }
+            return $lebt
+          }
+
+          # 1. Aus dem Stand: Die App läuft und ändert von sich aus nichts am Autostart.
+          Remove-Item $daten -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-ItemProperty $run -Name ZeiterfassungFuerOdoo -ErrorAction SilentlyContinue
+          $lebt = Starten 30
+          $nachher = (Get-ItemProperty $run -Name ZeiterfassungFuerOdoo -ErrorAction SilentlyContinue).ZeiterfassungFuerOdoo
+          Write-Host "Läuft: $lebt"
+          Write-Host "Autostart nach dem ersten Start: $(if ($nachher) { $nachher } else { '(keiner)' })"
+          foreach ($datei in "$daten\fehler.log", "$daten\settings.json") {
+            if (Test-Path $datei) { Write-Host "--- $datei"; Get-Content $datei }
+          }
+
+          # 2. Mit einem Eintrag, der ins Leere zeigt — etwa weil jemand den entpackten Ordner verschoben hat.
+          #    Die App setzt ihn beim Start auf die laufende Programmdatei; daran hängt auch, dass Pfad und
+          #    Argument im Eintrag stimmen.
+          #    Auf einem frischen Windows gibt es den Schlüssel noch gar nicht; die App legt ihn beim Einschalten
+          #    selbst an, hier muss er von Hand her.
+          New-Item -Path $run -Force | Out-Null
+          Set-ItemProperty $run -Name ZeiterfassungFuerOdoo -Value '"C:\Irgendwo\Alt\Zeiterfassung.exe" --autostart'
+          $lebtWieder = Starten 30
+          $repariert = (Get-ItemProperty $run -Name ZeiterfassungFuerOdoo -ErrorAction SilentlyContinue).ZeiterfassungFuerOdoo
+          Write-Host "Autostart nach dem zweiten Start: $repariert"
+
+          Remove-ItemProperty $run -Name ZeiterfassungFuerOdoo -ErrorAction SilentlyContinue
+          Get-WinEvent -LogName Application -MaxEvents 20 -ErrorAction SilentlyContinue |
+            Where-Object { $_.ProviderName -in '.NET Runtime', 'Application Error', 'Windows Error Reporting' } |
+            Format-List TimeCreated, ProviderName, Message
+
+          if (-not $lebt) { throw 'Die App lief nach dem ersten Start nicht mehr' }
+          if (-not $lebtWieder) { throw 'Die App lief nach dem zweiten Start nicht mehr' }
+          if ($nachher) { throw "Die unverpackte Fassung hat den Autostart ungefragt eingeschaltet: $nachher" }
+          if ($repariert -ne $erwartet) { throw "Autostart-Eintrag nicht auf den neuen Pfad gesetzt: $repariert" }
+          if (Test-Path "$daten\fehler.log") { throw 'Die App hat Fehler protokolliert' }
+
+      - name: Archiv
+        shell: pwsh
+        run: |
+          # Dieselbe Quelle wie der Release-Workflow, damit die Nummern nicht auseinanderlaufen.
+          $version = (Select-String -Path Directory.Build.props -Pattern '<Version>(.*)</Version>').Matches[0].Groups[1].Value
+          if (-not $version) { throw 'Keine <Version> in Directory.Build.props gefunden' }
+          $ziel = "$PWD\build\zip\Zeiterfassung-$version-${{ matrix.plattform }}.zip"
+          New-Item -ItemType Directory -Force "$PWD\build\zip" | Out-Null
+          Compress-Archive -Path "$PWD\build\unverpackt\*" -DestinationPath $ziel -CompressionLevel Optimal
+          Write-Host "$(Split-Path $ziel -Leaf): $([math]::Round((Get-Item $ziel).Length / 1MB, 1)) MB"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: unverpackt-${{ matrix.plattform }}
+          path: build/zip
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v7
+        if: always() && matrix.plattform == 'x64'
+        with:
+          name: bilder-unverpackt
+          path: build/bilder-unverpackt
+          if-no-files-found: ignore

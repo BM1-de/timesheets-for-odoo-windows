@@ -25,6 +25,27 @@
     <GenerateTestArtifacts>false</GenerateTestArtifacts>
   </PropertyGroup>
 
+  <!-- Unverpackte Fassung: dieselbe App ohne MSIX und ohne Signatur, zum Entpacken aus einem ZIP. Der Bau setzt
+       WindowsPackageType=None, dann startet das Windows App SDK ohne Paketidentität (RegFree WinRT). Weil die App
+       schon self-contained ist, braucht sie dafür nichts zusätzlich installiert.
+
+       Die Ressourcen sind der Knackpunkt: WinUI holt die Vorlagen seiner Bedienelemente über ms-resource: aus einer
+       PRI-Datei. Beim Bau heißt sie <AssemblyName>.pri, und erst das MSIX-Packen legt sie als resources.pri ins
+       Paket. Ohne Paket lädt die Laufzeit aber genau die Datei resources.pri neben der Programmdatei; fehlt sie,
+       bricht die App beim ersten Bedienelement in Microsoft.UI.Xaml.dll ab (Ausnahmecode 0xc000027b). Der Inhalt
+       stimmt schon, auch die Ressourcen von WinUI selbst sind darin — es ist allein der Name. -->
+  <PropertyGroup Condition="'$(WindowsPackageType)' == 'None'">
+    <ProjectPriFileName>resources.pri</ProjectPriFileName>
+  </PropertyGroup>
+
+  <!-- Beim MSIX-Bau landen Content-Dateien nur im Paket, nicht im Ausgabeordner. Ohne Paket müssen sie neben der
+       Programmdatei liegen: Die Symbole für den Infobereich und die Fenstertitel liest die App als Datei, und
+       ms-appx:///Assets/… im XAML sucht ohne Paket ebenfalls dort — sonst bleibt die Stelle im Fenster einfach leer,
+       ohne Fehlermeldung. Alles zusammen sind 260 kB, darum der ganze Ordner statt einer Liste, die veraltet. -->
+  <ItemGroup Condition="'$(WindowsPackageType)' == 'None'">
+    <Content Update="Assets\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
     <Content Include="Assets\**\*" />
