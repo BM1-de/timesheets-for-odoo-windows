@@ -201,6 +201,35 @@ Actions, siehe [RELEASE.md](RELEASE.md).
   erscheint die App auf Englisch.
 - Ein Odoo-Konto je Windows-Benutzer.
 
+<!-- bm1-verweise:start (scripts/readme-bm1.py, nicht von Hand ändern) -->
+
+## Weitere Odoo-Projekte von BM1
+
+| Projekt | Zweck |
+| ------- | ----- |
+| [Cc und Bcc](https://github.com/BM1-de/odoo-mail-cc-bcc) | Cc und Bcc beim Mailversand, eine einzige E-Mail an alle Empfänger |
+| [Briefanrede](https://github.com/BM1-de/odoo-partner-salutation) | Anrede am Kontakt und die passende Grußzeile in Rechnungsmails |
+| [Namenszusatz](https://github.com/BM1-de/odoo-partner-name-addition) | Zweite Namenszeile am Kontakt, gedruckt in jeder Anschrift |
+| [Stundennachweis auf der Rechnung](https://github.com/BM1-de/odoo-timesheet-invoice) | Abgerechnete Zeiteinträge auf der Rechnung, je Aufgabe summiert |
+| [Arbeitszeitgesetz](https://github.com/BM1-de/odoo-l10n-germany-arbzg) | Gesetzliche Pausen und Höchstarbeitszeit bei Anwesenheiten, Arbeitszeitkonto ab Odoo 20 |
+| [Deutsche EÜR](https://github.com/BM1-de/odoo-l10n-germany-euer) | Einnahmenüberschussrechnung mit Anlage EÜR, AVEÜR und Anlagenverzeichnis |
+| [Papierkram-Import](https://github.com/BM1-de/odoo-papierkram-import) | Kontakte, Rechnungen, Belege, Zahlungen und Zeiten aus Papierkram übernehmen |
+| [Zeiterfassung für Odoo (macOS)](https://github.com/BM1-de/timesheets-for-odoo) | Menüleisten-App für Zeiten und Anwesenheit |
+
+## Über BM1
+
+<a href="https://bm1.de"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/bm1/logo-bm1-negativ.svg"><img src="docs/bm1/logo-bm1.svg" alt="BM1" width="180"></picture></a>
+
+Entwickelt und gepflegt von [BM1](https://bm1.de), der Baumgärtner Marketing GmbH aus
+Bayreuth: Agentur für [Websites](https://bm1.de/websites/),
+[Webentwicklung](https://bm1.de/webentwicklung/), [SEO](https://bm1.de/seo/) und
+[individuelle digitale Lösungen](https://bm1.de/digitale-spezial-themen/). Wir arbeiten selbst
+jeden Tag mit Odoo und bauen, was uns dort fehlt. Wenn Sie Unterstützung bei Odoo, einer
+Website oder einer Anbindung brauchen, die es nicht von der Stange gibt:
+[sprechen Sie uns an](https://bm1.de/kontakt/).
+
+<!-- bm1-verweise:end -->
+
 ## Marke
 
 Odoo ist eine Marke der Odoo S.A. Dieses Projekt ist unabhängig und steht in keiner Verbindung
